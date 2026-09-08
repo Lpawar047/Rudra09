@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans antialiased selection:bg-indigo-600 selection:text-white transition-colors duration-200;
+  }
+  
+  /* Focus outlines for accessibility */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-indigo-600 ring-offset-2 ring-offset-white dark:ring-offset-slate-900;
+  }
+}
+
+/* Custom smooth scrollbars for tables and sidebars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Modern SaaS glowing grid patterns */
+.bg-grid-pattern {
+  background-size: 32px 32px;
+  background-image: linear-gradient(to right, rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
+}
+.dark .bg-grid-pattern {
+  background-image: linear-gradient(to right, rgba(99, 102, 241, 0.08) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(99, 102, 241, 0.08) 1px, transparent 1px);
+}
+
+

@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <!-- Metallic Gold Gradient -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D4A62A" />
+      <stop offset="50%" stop-color="#C89220" />
+      <stop offset="100%" stop-color="#AA7511" />
+    </linearGradient>
+
+    <!-- Deep Navy Gradient -->
+    <linearGradient id="navyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F284B" />
+      <stop offset="100%" stop-color="#071B35" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="500" height="500" fill="#FFFFFF" />
+
+  <g transform="translate(0, 10)">
+    <!-- 1. SHIELD EMBLEM -->
+    <!-- Outer Deep Navy Shield Border -->
+    <path d="M 250,45 L 340,75 C 340,165 315,225 250,255 C 185,225 160,165 160,75 Z" 
+          fill="none" stroke="url(#navyGrad)" stroke-width="12" stroke-linejoin="round" />
+    
+    <!-- Inner Metallic Gold Shield Border -->
+    <path d="M 250,60 L 328,86 C 328,160 305,212 250,238 C 195,212 172,160 172,86 Z" 
+          fill="none" stroke="url(#goldGrad)" stroke-width="6" stroke-linejoin="round" />
+
+    <!-- 2. STYLIZED 'R' INSIDE SHIELD -->
+    <!-- Deep Navy R -->
+    <path d="M 195,95 L 235,95 C 255,95 268,105 268,122 C 268,137 257,146 242,149 L 268,185 L 244,185 L 222,153 L 217,153 L 217,185 L 195,185 Z M 217,113 L 217,137 L 233,137 C 243,137 248,132 248,125 C 248,118 243,113 233,113 Z" 
+          fill="url(#navyGrad)" />
+
+    <!-- 3. THREE ASCENDING GOLD VERTICAL BARS -->
+    <!-- Bar 1 (Short) -->
+    <rect x="272" y="145" width="10" height="40" rx="2" fill="url(#goldGrad)" />
+    <!-- Bar 2 (Medium) -->
+    <rect x="287" y="125" width="10" height="60" rx="2" fill="url(#goldGrad)" />
+    <!-- Bar 3 (Tall) -->
+    <rect x="302" y="105" width="10" height="80" rx="2" fill="url(#goldGrad)" />
+
+    <!-- 4. AUTOMOBILE SILHOUETTE INTEGRATED AT BOTTOM OF SHIELD -->
+    <!-- Car Body Shape -->
+    <path d="M 165,222 C 180,205 205,192 235,190 C 275,188 315,195 332,206 C 342,212 344,222 340,228 C 330,234 300,238 250,238 C 200,238 170,234 165,222 Z" 
+          fill="url(#navyGrad)" />
+    <!-- Car Cabin / Roof Arc -->
+    <path d="M 205,197 C 220,183 260,183 295,195 C 270,190 230,190 205,197 Z" 
+          fill="#FFFFFF" />
+    <!-- Front Bumper Accent -->
+    <path d="M 165,222 L 185,232 L 235,235 L 175,230 Z" fill="url(#navyGrad)" />
+
+    <!-- 5. SWEEPING ROAD / SWOOSH BENEATH VEHICLE -->
+    <!-- Metallic Gold Road Swoosh -->
+    <path d="M 205,238 C 250,238 310,210 375,200 C 315,225 260,270 235,290 C 210,270 195,250 205,238 Z" 
+          fill="url(#goldGrad)" />
+    <!-- Road Centerline Dash Accents (White) -->
+    <path d="M 270,232 L 285,228 M 245,255 L 260,248" 
+          stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" />
+    <!-- Deep Navy Base Swoosh -->
+    <path d="M 235,290 C 265,260 325,220 375,200 C 330,225 270,275 235,290 Z" 
+          fill="url(#navyGrad)" />
+  </g>
+
+  <!-- 6. MAIN BRAND NAME - RUDRA -->
+  <text x="250" y="365" 
+        text-anchor="middle" 
+        font-family="'Montserrat', 'Arial Black', 'Helvetica', sans-serif" 
+        font-size="62" 
+        font-weight="900" 
+        letter-spacing="6" 
+        fill="#071B35">
+    RUDRA
+  </text>
+
+  <!-- 7. SERVICES TEXT WITH FLANKING GOLD LINES -->
+  <!-- Left Gold Line -->
+  <line x1="90" y1="412" x2="180" y2="412" stroke="url(#goldGrad)" stroke-width="3.5" stroke-linecap="round" />
+  
+  <!-- SERVICES Text -->
+  <text x="250" y="420" 
+        text-anchor="middle" 
+        font-family="'Montserrat', 'Arial', 'Helvetica', sans-serif" 
+        font-size="26" 
+        font-weight="800" 
+        letter-spacing="14" 
+        fill="url(#goldGrad)">
+    SERVICES
+  </text>
+
+  <!-- Right Gold Line -->
+  <line x1="320" y1="412" x2="410" y2="412" stroke="url(#goldGrad)" stroke-width="3.5" stroke-linecap="round" />
+</svg>

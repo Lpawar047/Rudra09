@@ -1,0 +1,13 @@
+{
+  "name": "rudra-services-monorepo",
+  "version": "1.0.0",
+  "description": "Rudra Services - Vehicle Loan Recovery & Collection Platform",
+  "scripts": {
+    "dev": "concurrently \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
+    "build": "npm --prefix backend run build && npm --prefix frontend run build",
+    "seed": "npm --prefix backend run seed"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

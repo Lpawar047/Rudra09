@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const recoveryCasesController_1 = require("../controllers/recoveryCasesController");
+const auth_1 = require("../middleware/auth");
+const router = (0, express_1.Router)();
+router.use(auth_1.authenticateToken);
+router.get('/', recoveryCasesController_1.getRecoveryCases);
+router.get('/:id', recoveryCasesController_1.getRecoveryCaseById);
+router.post('/', (0, auth_1.requireRole)(['ADMIN', 'MANAGER']), recoveryCasesController_1.createRecoveryCase);
+router.put('/:id', recoveryCasesController_1.updateRecoveryCase);
+router.delete('/:id', (0, auth_1.requireRole)(['ADMIN']), recoveryCasesController_1.deleteRecoveryCase);
+exports.default = router;
