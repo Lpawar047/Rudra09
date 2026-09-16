@@ -152,7 +152,7 @@ export const ManagerRecoveryCases: React.FC = () => {
       minWidth: '110px',
       stickyLeft: '0px',
       accessor: (row) => (
-        <span className="font-extrabold font-mono text-[#4F46E5] dark:text-indigo-400 text-xs">
+        <span className="font-extrabold font-mono text-[#111111] text-xs">
           {row.recovery_code || `RC-${String(row.id).padStart(3, '0')}`}
         </span>
       ),
@@ -167,23 +167,24 @@ export const ManagerRecoveryCases: React.FC = () => {
         return (
           <div className="group/prop relative">
             <div className="flex items-center gap-1.5">
-              <span className="font-bold text-[#334155] dark:text-slate-200 font-mono text-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FACC15] shrink-0" />
+              <span className="font-bold text-[#111111] font-mono text-xs">
                 {proposal}
               </span>
               <button
                 type="button"
                 onClick={() => handleCopy(proposal, `mgr-prop-${row.id}`)}
-                className="opacity-0 group-hover/prop:opacity-100 text-slate-400 hover:text-indigo-600 transition-opacity p-0.5 cursor-pointer"
+                className="opacity-0 group-hover/prop:opacity-100 text-[#666666] hover:text-[#000000] transition-opacity p-0.5 cursor-pointer"
                 title="Copy Proposal No"
               >
                 {copiedKey === `mgr-prop-${row.id}` ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  <Check className="w-3.5 h-3.5 text-[#111111]" />
                 ) : (
                   <Copy className="w-3.5 h-3.5" />
                 )}
               </button>
             </div>
-            <p className="text-[11px] font-semibold text-[#64748B] dark:text-slate-400">
+            <p className="text-[11px] font-semibold text-[#666666] pl-3">
               DPD: {row.dpd || 0} Days
             </p>
           </div>
@@ -197,14 +198,14 @@ export const ManagerRecoveryCases: React.FC = () => {
       stickyShadow: true,
       accessor: (row) => (
         <div>
-          <p className="font-semibold text-sm text-[#0F172A] dark:text-white leading-snug">
+          <p className="font-bold text-sm text-[#111111] leading-snug">
             {row.customer_name || 'N/A'}
           </p>
-          <div className="flex items-center gap-1 mt-0.5 text-xs text-[#64748B] dark:text-slate-400">
+          <div className="flex items-center gap-1 mt-0.5 text-xs text-[#666666]">
             <Phone className="w-3 h-3 shrink-0" />
             <a
               href={`tel:${row.customer_phone}`}
-              className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-mono font-medium"
+              className="hover:text-[#000000] transition-colors font-mono font-medium"
             >
               {row.customer_phone || 'N/A'}
             </a>
@@ -218,10 +219,10 @@ export const ManagerRecoveryCases: React.FC = () => {
       align: 'center',
       accessor: (row) => (
         <div className="inline-flex flex-col items-center">
-          <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-mono">
+          <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-[#F2F2F2] text-[#111111] border border-[#D6D6D6] font-mono">
             {getBomBucket(row)}
           </span>
-          <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
+          <span className="text-[10px] text-[#666666] font-semibold mt-0.5">
             ({row.dpd || 0}d DPD)
           </span>
         </div>
@@ -232,7 +233,7 @@ export const ManagerRecoveryCases: React.FC = () => {
       minWidth: '130px',
       align: 'right',
       accessor: (row) => (
-        <span className="font-mono font-bold text-sm text-[#0F172A] dark:text-slate-100">
+        <span className="font-mono font-bold text-sm text-[#111111]">
           {formatCurrency(row.outstanding_amount)}
         </span>
       ),
@@ -242,7 +243,7 @@ export const ManagerRecoveryCases: React.FC = () => {
       minWidth: '130px',
       align: 'right',
       accessor: (row) => (
-        <span className="font-mono text-xs font-medium text-[#475569] dark:text-slate-300">
+        <span className="font-mono text-xs font-semibold text-[#666666]">
           {formatCurrency(row.emi_amount)}
         </span>
       ),
@@ -255,13 +256,11 @@ export const ManagerRecoveryCases: React.FC = () => {
       accessor: (row) => {
         const due = parseFloat(String(row.total_overdue || row.outstanding_amount || 0));
         return (
-          <span
-            className={`font-mono font-bold text-sm ${
-              due > 0 ? 'text-[#DC2626] dark:text-rose-400' : 'text-[#16A34A] dark:text-emerald-400'
-            }`}
-          >
-            {formatCurrency(due)}
-          </span>
+          <div className="border-l-2 border-[#FACC15] pl-2 py-0.5 inline-block text-right">
+            <span className="font-mono font-black text-sm text-[#000000]">
+              {formatCurrency(due)}
+            </span>
+          </div>
         );
       },
     },
@@ -273,18 +272,18 @@ export const ManagerRecoveryCases: React.FC = () => {
         return (
           <div className="group/addr relative max-w-[270px]">
             <div className="flex items-start justify-between gap-1">
-              <p className="text-xs text-[#334155] dark:text-slate-300 line-clamp-2 leading-relaxed" title={addr}>
+              <p className="text-xs text-[#333333] line-clamp-2 leading-relaxed" title={addr}>
                 {addr}
               </p>
               {row.customer_address && (
                 <button
                   type="button"
                   onClick={() => handleCopy(addr, `mgr-addr-${row.id}`)}
-                  className="opacity-0 group-hover/addr:opacity-100 p-0.5 text-slate-400 hover:text-indigo-600 transition-opacity shrink-0 cursor-pointer"
+                  className="opacity-0 group-hover/addr:opacity-100 p-0.5 text-[#666666] hover:text-[#000000] transition-opacity shrink-0 cursor-pointer"
                   title="Copy Address"
                 >
                   {copiedKey === `mgr-addr-${row.id}` ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    <Check className="w-3.5 h-3.5 text-[#111111]" />
                   ) : (
                     <Copy className="w-3.5 h-3.5" />
                   )}
@@ -292,7 +291,7 @@ export const ManagerRecoveryCases: React.FC = () => {
               )}
             </div>
             {row.customer_city && (
-              <span className="inline-block mt-0.5 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">
+              <span className="inline-block mt-0.5 text-[10px] font-bold text-[#666666] uppercase">
                 {row.customer_city}
               </span>
             )}
@@ -305,10 +304,10 @@ export const ManagerRecoveryCases: React.FC = () => {
       minWidth: '190px',
       accessor: (row) => (
         <div>
-          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold font-mono bg-[#EFF6FF] text-[#1D4ED8] border border-[#BFDBFE] dark:bg-blue-950/80 dark:text-blue-300 dark:border-blue-800 tracking-wide">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold font-mono bg-[#111111] text-[#FFFFFF] border border-[#000000] tracking-wider shadow-xs">
             {row.registration_number || 'N/A'}
           </span>
-          <p className="text-[11px] text-[#64748B] dark:text-slate-400 font-medium mt-0.5 truncate max-w-[170px]" title={row.vehicle_model || row.asset_desc || 'Commercial Vehicle'}>
+          <p className="text-[11px] text-[#666666] font-medium mt-0.5 truncate max-w-[170px]" title={row.vehicle_model || row.asset_desc || 'Commercial Vehicle'}>
             {row.vehicle_model || row.asset_desc || 'Commercial Vehicle'}
           </p>
         </div>
@@ -320,17 +319,17 @@ export const ManagerRecoveryCases: React.FC = () => {
       accessor: (row) => {
         const eng = row.engine_number || 'N/A';
         return (
-          <div className="flex items-center gap-1 font-mono text-xs text-[#334155] dark:text-slate-300 group/eng">
+          <div className="flex items-center gap-1 font-mono text-xs text-[#333333] group/eng">
             <span className="font-semibold" title={eng}>{eng}</span>
             {eng !== 'N/A' && (
               <button
                 type="button"
                 onClick={() => handleCopy(eng, `mgr-eng-${row.id}`)}
-                className="opacity-0 group-hover/eng:opacity-100 text-slate-400 hover:text-indigo-600 transition-opacity cursor-pointer p-0.5"
+                className="opacity-0 group-hover/eng:opacity-100 text-[#666666] hover:text-[#000000] transition-opacity cursor-pointer p-0.5"
                 title="Copy Engine No"
               >
                 {copiedKey === `mgr-eng-${row.id}` ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  <Check className="w-3.5 h-3.5 text-[#111111]" />
                 ) : (
                   <Copy className="w-3.5 h-3.5" />
                 )}
@@ -346,17 +345,17 @@ export const ManagerRecoveryCases: React.FC = () => {
       accessor: (row) => {
         const chs = row.chassis_number || 'N/A';
         return (
-          <div className="flex items-center gap-1 font-mono text-xs text-[#334155] dark:text-slate-300 group/chs">
+          <div className="flex items-center gap-1 font-mono text-xs text-[#333333] group/chs">
             <span className="font-semibold" title={chs}>{chs}</span>
             {chs !== 'N/A' && (
               <button
                 type="button"
                 onClick={() => handleCopy(chs, `mgr-chs-${row.id}`)}
-                className="opacity-0 group-hover/chs:opacity-100 text-slate-400 hover:text-indigo-600 transition-opacity cursor-pointer p-0.5"
+                className="opacity-0 group-hover/chs:opacity-100 text-[#666666] hover:text-[#000000] transition-opacity cursor-pointer p-0.5"
                 title="Copy Chassis No"
               >
                 {copiedKey === `mgr-chs-${row.id}` ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  <Check className="w-3.5 h-3.5 text-[#111111]" />
                 ) : (
                   <Copy className="w-3.5 h-3.5" />
                 )}
@@ -373,7 +372,7 @@ export const ManagerRecoveryCases: React.FC = () => {
         const desc = row.asset_desc || row.vehicle_model || 'Vehicle';
         return (
           <span
-            className="text-xs font-semibold text-[#0F172A] dark:text-slate-200 truncate block max-w-[190px]"
+            className="text-xs font-semibold text-[#111111] truncate block max-w-[190px]"
             title={desc}
           >
             {desc}
@@ -387,7 +386,7 @@ export const ManagerRecoveryCases: React.FC = () => {
       accessor: (row) => (
         <a
           href={`tel:${row.customer_phone}`}
-          className="font-mono text-xs font-bold text-[#0F172A] dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+          className="font-mono text-xs font-bold text-[#111111] hover:text-[#000000] underline decoration-dotted transition-colors"
         >
           {row.customer_phone || 'N/A'}
         </a>
@@ -410,8 +409,8 @@ export const ManagerRecoveryCases: React.FC = () => {
         <span
           className={`inline-block text-xs font-bold px-2.5 py-1 rounded-md border ${
             row.assigned_employee_name
-              ? 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700'
-              : 'bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+              ? 'bg-[#F2F2F2] text-[#111111] border-[#D6D6D6]'
+              : 'bg-[#FEF9C3] text-[#111111] border-[#EAB308]'
           }`}
         >
           {row.assigned_employee_name || 'Unassigned'}
@@ -430,7 +429,7 @@ export const ManagerRecoveryCases: React.FC = () => {
               setShowDetailModal(true);
             }}
             title="View Full Case Dossier"
-            className="min-h-[34px] min-w-[34px] flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+            className="min-h-[34px] min-w-[34px] flex items-center justify-center rounded-lg bg-[#111111] hover:bg-[#FACC15] text-[#FFFFFF] hover:text-[#000000] border border-[#111111] hover:border-[#EAB308] transition-colors cursor-pointer"
           >
             <Eye className="w-4 h-4" />
           </button>
@@ -442,7 +441,7 @@ export const ManagerRecoveryCases: React.FC = () => {
               setShowAssignModal(true);
             }}
             title="Assign Field Officer"
-            className="min-h-[34px] min-w-[34px] flex items-center justify-center rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 transition-colors cursor-pointer"
+            className="min-h-[34px] min-w-[34px] flex items-center justify-center rounded-lg bg-[#FFFFFF] hover:bg-[#F2F2F2] text-[#111111] border border-[#D6D6D6] transition-colors cursor-pointer"
           >
             <UserCheck className="w-4 h-4" />
           </button>
@@ -456,10 +455,10 @@ export const ManagerRecoveryCases: React.FC = () => {
       {/* Title Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-[#0F172A] dark:text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight">
             Manager Case Supervision
           </h1>
-          <p className="text-sm text-[#64748B] dark:text-slate-400 font-medium mt-1">
+          <p className="text-sm text-[#666666] font-medium mt-1">
             Supervise team recovery operations, allocate officers, and monitor dues.
           </p>
         </div>
@@ -467,7 +466,7 @@ export const ManagerRecoveryCases: React.FC = () => {
           type="button"
           onClick={fetchCases}
           disabled={isLoading}
-          className="min-h-[42px] px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
+          className="min-h-[42px] px-3.5 py-2 rounded-xl border border-[#D6D6D6] bg-[#FFFFFF] text-[#111111] hover:bg-[#F2F2F2] text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
         >
           <RotateCcw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
           <span>Refresh</span>
@@ -475,11 +474,11 @@ export const ManagerRecoveryCases: React.FC = () => {
       </div>
 
       {/* Filter Toolbar */}
-      <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-[#E2E8F0] dark:border-slate-800 shadow-sm space-y-3">
+      <div className="bg-[#FFFFFF] p-4 rounded-2xl border border-[#D6D6D6] shadow-xs space-y-3">
         {/* Mobile Search & Filter Button */}
         <div className="flex sm:hidden items-center gap-2">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-[#64748B] pointer-events-none" />
+            <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-[#666666] pointer-events-none" />
             <input
               type="text"
               placeholder="Search Proposal, Customer, Reg..."
@@ -488,7 +487,7 @@ export const ManagerRecoveryCases: React.FC = () => {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="min-h-[44px] w-full pl-10 pr-3.5 py-2.5 text-xs bg-white dark:bg-slate-800 border border-[#CBD5E1] dark:border-slate-700 rounded-xl text-[#0F172A] dark:text-white placeholder:text-[#64748B] font-medium focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+              className="min-h-[44px] w-full pl-10 pr-3.5 py-2.5 text-xs bg-[#FFFFFF] border border-[#D6D6D6] rounded-xl text-[#111111] placeholder:text-[#666666] font-medium focus:outline-none focus:ring-2 focus:ring-[#FACC15]"
             />
           </div>
           <button
@@ -496,14 +495,14 @@ export const ManagerRecoveryCases: React.FC = () => {
             onClick={() => setShowMobileFilters(!showMobileFilters)}
             className={`min-h-[44px] px-3.5 rounded-xl border text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer ${
               showMobileFilters || hasActiveFilters
-                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700'
+                ? 'bg-[#FACC15] text-[#000000] border-[#EAB308] shadow-xs'
+                : 'bg-[#FFFFFF] text-[#111111] border-[#D6D6D6]'
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
             <span>Filters</span>
             {hasActiveFilters && (
-              <span className="w-5 h-5 rounded-full bg-white text-indigo-700 text-[10px] font-black flex items-center justify-center">
+              <span className="w-5 h-5 rounded-full bg-[#111111] text-[#FFFFFF] text-[10px] font-black flex items-center justify-center">
                 {[statusFilter, priorityFilter, employeeFilter, bucketFilter].filter(Boolean).length}
               </span>
             )}
@@ -512,17 +511,17 @@ export const ManagerRecoveryCases: React.FC = () => {
 
         {/* Mobile Filters Panel */}
         {showMobileFilters && (
-          <div className="sm:hidden p-4 bg-slate-50 dark:bg-slate-850 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-700">
-              <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <Filter className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+          <div className="sm:hidden p-4 bg-[#F8F8F8] rounded-xl border border-[#D6D6D6] space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-[#D6D6D6]">
+              <span className="font-extrabold text-xs uppercase tracking-wider text-[#111111] flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5 text-[#111111]" />
                 <span>Supervision Filters</span>
               </span>
               {hasActiveFilters && (
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline"
+                  className="text-xs font-bold text-[#111111] hover:underline"
                 >
                   Reset All
                 </button>
@@ -531,7 +530,7 @@ export const ManagerRecoveryCases: React.FC = () => {
 
             <div className="space-y-2.5">
               <div>
-                <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                <label className="text-[11px] font-bold text-[#666666] block mb-1">
                   Recovery Status
                 </label>
                 <select
@@ -540,7 +539,7 @@ export const ManagerRecoveryCases: React.FC = () => {
                     setStatusFilter(e.target.value);
                     setPage(1);
                   }}
-                  className="min-h-[44px] w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-bold"
+                  className="min-h-[44px] w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#D6D6D6] rounded-xl text-[#111111] font-bold"
                 >
                   <option value="">All Recovery Statuses</option>
                   <option value="Paid">Paid</option>
@@ -556,7 +555,7 @@ export const ManagerRecoveryCases: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                <label className="text-[11px] font-bold text-[#666666] block mb-1">
                   BOM Bucket
                 </label>
                 <select
@@ -565,7 +564,7 @@ export const ManagerRecoveryCases: React.FC = () => {
                     setBucketFilter(e.target.value);
                     setPage(1);
                   }}
-                  className="min-h-[44px] w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-bold"
+                  className="min-h-[44px] w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#D6D6D6] rounded-xl text-[#111111] font-bold"
                 >
                   <option value="">All BOM Buckets</option>
                   <option value="BOM 1">BOM 1 (0-30 Days)</option>
@@ -576,7 +575,7 @@ export const ManagerRecoveryCases: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                <label className="text-[11px] font-bold text-[#666666] block mb-1">
                   Priority
                 </label>
                 <select
@@ -585,7 +584,7 @@ export const ManagerRecoveryCases: React.FC = () => {
                     setPriorityFilter(e.target.value);
                     setPage(1);
                   }}
-                  className="min-h-[44px] w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-bold"
+                  className="min-h-[44px] w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#D6D6D6] rounded-xl text-[#111111] font-bold"
                 >
                   <option value="">All Priorities</option>
                   <option value="LOW">LOW</option>
@@ -596,7 +595,7 @@ export const ManagerRecoveryCases: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                <label className="text-[11px] font-bold text-[#666666] block mb-1">
                   Field Officer
                 </label>
                 <select
@@ -605,7 +604,7 @@ export const ManagerRecoveryCases: React.FC = () => {
                     setEmployeeFilter(e.target.value);
                     setPage(1);
                   }}
-                  className="min-h-[44px] w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-bold"
+                  className="min-h-[44px] w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#D6D6D6] rounded-xl text-[#111111] font-bold"
                 >
                   <option value="">All Field Officers</option>
                   {employees.map((emp) => (
@@ -620,7 +619,7 @@ export const ManagerRecoveryCases: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowMobileFilters(false)}
-                  className="w-full min-h-[44px] bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-extrabold text-xs transition-colors"
+                  className="w-full min-h-[44px] bg-[#111111] hover:bg-[#333333] text-[#FFFFFF] rounded-xl font-extrabold text-xs transition-colors cursor-pointer"
                 >
                   Apply Filters
                 </button>
@@ -632,7 +631,7 @@ export const ManagerRecoveryCases: React.FC = () => {
         {/* Desktop & Tablet Filters (5 Columns) */}
         <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <div className="relative lg:col-span-1">
-            <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-[#64748B] pointer-events-none" />
+            <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-[#666666] pointer-events-none" />
             <input
               type="text"
               placeholder="Search Cases..."
@@ -641,7 +640,7 @@ export const ManagerRecoveryCases: React.FC = () => {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="min-h-[44px] w-full pl-10 pr-3.5 py-2.5 text-xs bg-white dark:bg-slate-800 border border-[#CBD5E1] dark:border-slate-700 rounded-xl text-[#0F172A] dark:text-white placeholder:text-[#64748B] font-medium focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:border-[#4F46E5]"
+              className="min-h-[44px] w-full pl-10 pr-3.5 py-2.5 text-xs bg-[#FFFFFF] border border-[#D6D6D6] rounded-xl text-[#111111] placeholder:text-[#666666] font-medium focus:outline-none focus:ring-2 focus:ring-[#FACC15]"
             />
           </div>
 
@@ -652,7 +651,7 @@ export const ManagerRecoveryCases: React.FC = () => {
                 setStatusFilter(e.target.value);
                 setPage(1);
               }}
-              className="min-h-[44px] w-full px-3.5 py-2.5 text-xs bg-white dark:bg-slate-800 border border-[#CBD5E1] dark:border-slate-700 rounded-xl text-[#0F172A] dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:border-[#4F46E5]"
+              className="min-h-[44px] w-full px-3.5 py-2.5 text-xs bg-[#FFFFFF] border border-[#D6D6D6] rounded-xl text-[#111111] font-bold focus:outline-none focus:ring-2 focus:ring-[#FACC15]"
             >
               <option value="">All Recovery Statuses</option>
               <option value="Paid">Paid</option>
@@ -674,7 +673,7 @@ export const ManagerRecoveryCases: React.FC = () => {
                 setBucketFilter(e.target.value);
                 setPage(1);
               }}
-              className="min-h-[44px] w-full px-3.5 py-2.5 text-xs bg-white dark:bg-slate-800 border border-[#CBD5E1] dark:border-slate-700 rounded-xl text-[#0F172A] dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:border-[#4F46E5]"
+              className="min-h-[44px] w-full px-3.5 py-2.5 text-xs bg-[#FFFFFF] border border-[#D6D6D6] rounded-xl text-[#111111] font-bold focus:outline-none focus:ring-2 focus:ring-[#FACC15]"
             >
               <option value="">All BOM Buckets</option>
               <option value="BOM 1">BOM 1 (0-30 Days)</option>
@@ -691,7 +690,7 @@ export const ManagerRecoveryCases: React.FC = () => {
                 setPriorityFilter(e.target.value);
                 setPage(1);
               }}
-              className="min-h-[44px] w-full px-3.5 py-2.5 text-xs bg-white dark:bg-slate-800 border border-[#CBD5E1] dark:border-slate-700 rounded-xl text-[#0F172A] dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:border-[#4F46E5]"
+              className="min-h-[44px] w-full px-3.5 py-2.5 text-xs bg-[#FFFFFF] border border-[#D6D6D6] rounded-xl text-[#111111] font-bold focus:outline-none focus:ring-2 focus:ring-[#FACC15]"
             >
               <option value="">All Priorities</option>
               <option value="LOW">LOW</option>
@@ -708,7 +707,7 @@ export const ManagerRecoveryCases: React.FC = () => {
                 setEmployeeFilter(e.target.value);
                 setPage(1);
               }}
-              className="min-h-[44px] w-full px-3.5 py-2.5 text-xs bg-white dark:bg-slate-800 border border-[#CBD5E1] dark:border-slate-700 rounded-xl text-[#0F172A] dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:border-[#4F46E5]"
+              className="min-h-[44px] w-full px-3.5 py-2.5 text-xs bg-[#FFFFFF] border border-[#D6D6D6] rounded-xl text-[#111111] font-bold focus:outline-none focus:ring-2 focus:ring-[#FACC15]"
             >
               <option value="">All Field Officers</option>
               {employees.map((emp) => (
@@ -721,13 +720,13 @@ export const ManagerRecoveryCases: React.FC = () => {
         </div>
 
         {/* Filter Summary & Scroll Indicator */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-          <div className="flex items-center flex-wrap gap-2 text-[#64748B] dark:text-slate-400 font-semibold">
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#D6D6D6]/60 text-xs">
+          <div className="flex items-center flex-wrap gap-2 text-[#666666] font-semibold">
             <span>
-              Showing <strong className="text-[#0F172A] dark:text-white">{cases.length}</strong> loaded of{' '}
-              <strong className="text-[#0F172A] dark:text-white">{total}</strong> total cases
+              Showing <strong className="text-[#111111]">{cases.length}</strong> loaded of{' '}
+              <strong className="text-[#111111]">{total}</strong> total cases
             </span>
-            <span className="hidden md:inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-bold ml-2">
+            <span className="hidden md:inline-flex items-center gap-1 text-[#111111] font-bold ml-2">
               ← Scroll table horizontally for all 13 Excel columns →
             </span>
           </div>
@@ -736,7 +735,7 @@ export const ManagerRecoveryCases: React.FC = () => {
             <button
               type="button"
               onClick={clearFilters}
-              className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 flex items-center gap-1 cursor-pointer"
+              className="text-xs font-bold text-[#111111] hover:underline flex items-center gap-1 cursor-pointer"
             >
               <span>Clear all filters</span>
               <RotateCcw className="w-3 h-3" />
@@ -770,10 +769,10 @@ export const ManagerRecoveryCases: React.FC = () => {
             .join(' / ') || 'Commercial Vehicle';
 
           return (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 space-y-3 shadow-xs transition-shadow hover:shadow-md">
+            <div className="bg-[#FFFFFF] rounded-2xl border border-[#D6D6D6] p-4 space-y-3 shadow-xs transition-shadow hover:shadow-md">
               {/* Row 1: Recovery Code + Status */}
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
-                <span className="font-black font-mono text-[#4F46E5] dark:text-indigo-400 text-xs sm:text-sm tracking-wide">
+              <div className="flex items-center justify-between border-b border-[#D6D6D6]/60 pb-2.5">
+                <span className="font-black font-mono text-[#111111] text-xs sm:text-sm tracking-wide">
                   {item.recovery_code || `RC-${String(item.id).padStart(3, '0')}`}
                 </span>
                 <div className="flex items-center gap-1.5">
@@ -784,7 +783,7 @@ export const ManagerRecoveryCases: React.FC = () => {
 
               {/* Row 2: Customer Name (bold uppercase) */}
               <div>
-                <h3 className="font-black text-slate-900 dark:text-white text-base leading-tight tracking-tight uppercase">
+                <h3 className="font-black text-[#111111] text-base leading-tight tracking-tight uppercase">
                   {item.customer_name || 'N/A'}
                 </h3>
               </div>
@@ -793,17 +792,17 @@ export const ManagerRecoveryCases: React.FC = () => {
               <div className="space-y-1.5 text-xs">
                 {/* Proposal */}
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500 dark:text-slate-400 font-medium">Proposal:</span>
-                  <div className="flex items-center gap-1.5 font-mono font-bold text-slate-900 dark:text-slate-200">
+                  <span className="text-[#666666] font-medium">Proposal:</span>
+                  <div className="flex items-center gap-1.5 font-mono font-bold text-[#111111]">
                     <span>{proposal}</span>
                     <button
                       type="button"
                       onClick={() => handleCopy(proposal, `mgr-mob-${item.id}`)}
-                      className="p-1 text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer"
+                      className="p-1 text-[#666666] hover:text-[#000000] transition-colors cursor-pointer"
                       title="Copy Proposal No"
                     >
                       {copiedKey === `mgr-mob-${item.id}` ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        <Check className="w-3.5 h-3.5 text-[#111111]" />
                       ) : (
                         <Copy className="w-3.5 h-3.5" />
                       )}
@@ -813,16 +812,16 @@ export const ManagerRecoveryCases: React.FC = () => {
 
                 {/* Vehicle */}
                 <div className="flex items-start justify-between gap-2">
-                  <span className="text-slate-500 dark:text-slate-400 font-medium shrink-0">Vehicle:</span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200 text-right truncate">
+                  <span className="text-[#666666] font-medium shrink-0">Vehicle:</span>
+                  <span className="font-semibold text-[#111111] text-right truncate">
                     {vehicleDesc}
                   </span>
                 </div>
 
                 {/* Total Due */}
-                <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 font-mono">
-                  <span className="text-slate-700 dark:text-slate-300 font-bold">Total Due:</span>
-                  <span className={`text-base font-black ${totalDue > 0 ? 'text-[#DC2626] dark:text-rose-400' : 'text-[#16A34A] dark:text-emerald-400'}`}>
+                <div className="flex items-center justify-between pt-1 border-t border-[#D6D6D6]/60 font-mono">
+                  <span className="text-[#666666] font-bold">Total Due:</span>
+                  <span className="border-l-2 border-[#FACC15] pl-2 text-base font-black text-[#000000]">
                     {formatCurrency(totalDue)}
                   </span>
                 </div>
@@ -835,14 +834,14 @@ export const ManagerRecoveryCases: React.FC = () => {
                   setSelectedCase(item);
                   setShowDetailModal(true);
                 }}
-                className="w-full min-h-[44px] px-4 py-2.5 bg-gradient-to-r from-indigo-900 via-indigo-600 to-blue-600 hover:opacity-95 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full min-h-[44px] px-4 py-2.5 bg-[#FACC15] hover:bg-[#EAB308] text-[#000000] font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Eye className="w-4 h-4" />
                 <span>View Full Details</span>
               </button>
 
               {/* Quick Actions Grid */}
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="pt-2 border-t border-[#D6D6D6]/60">
                 <button
                   type="button"
                   onClick={() => {
@@ -850,7 +849,7 @@ export const ManagerRecoveryCases: React.FC = () => {
                     setAssignEmpId(item.assigned_employee_id ? String(item.assigned_employee_id) : '');
                     setShowAssignModal(true);
                   }}
-                  className="w-full min-h-[44px] flex items-center justify-center gap-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
+                  className="w-full min-h-[44px] flex items-center justify-center gap-1.5 rounded-xl bg-[#F2F2F2] hover:bg-[#E5E5E5] text-[#111111] border border-[#D6D6D6] text-xs font-bold transition-colors cursor-pointer"
                   title="Assign Officer"
                 >
                   <UserCheck className="w-4 h-4" />
@@ -880,16 +879,16 @@ export const ManagerRecoveryCases: React.FC = () => {
         onClose={() => setShowAssignModal(false)}
         title="Assign Field Officer"
       >
-        <form onSubmit={handleAssignSubmit} className="space-y-4 text-xs">
+        <form onSubmit={handleAssignSubmit} className="space-y-4 text-xs text-[#111111]">
           <div>
-            <label className="block font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+            <label className="block font-bold text-[#111111] mb-1.5">
               Select Field Officer
             </label>
             <select
               required
               value={assignEmpId}
               onChange={(e) => setAssignEmpId(e.target.value)}
-              className="min-h-[44px] w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-[#4F46E5] focus:border-[#4F46E5]"
+              className="min-h-[44px] w-full px-3.5 py-2.5 bg-[#FFFFFF] border border-[#D6D6D6] rounded-xl text-[#111111] font-bold focus:ring-2 focus:ring-[#FACC15]"
             >
               <option value="">Select Employee...</option>
               {employees.map((emp) => (
@@ -900,14 +899,14 @@ export const ManagerRecoveryCases: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+            <label className="block font-bold text-[#111111] mb-1.5">
               Assignment Remarks
             </label>
             <textarea
               rows={3}
               value={assignRemarks}
               onChange={(e) => setAssignRemarks(e.target.value)}
-              className="w-full p-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-[#4F46E5] focus:border-[#4F46E5]"
+              className="w-full p-3 bg-[#FFFFFF] border border-[#D6D6D6] rounded-xl text-[#111111] placeholder:text-[#666666] focus:ring-2 focus:ring-[#FACC15]"
               placeholder="Instructions for the field agent..."
             />
           </div>
@@ -915,14 +914,14 @@ export const ManagerRecoveryCases: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowAssignModal(false)}
-              className="min-h-[42px] px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold border border-slate-300 dark:border-slate-700 transition-colors cursor-pointer"
+              className="min-h-[42px] px-4 py-2.5 bg-[#F2F2F2] hover:bg-[#E5E5E5] text-[#111111] rounded-xl font-bold border border-[#D6D6D6] transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="min-h-[42px] px-5 py-2.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+              className="min-h-[42px] px-5 py-2.5 bg-[#111111] hover:bg-[#333333] text-[#FFFFFF] font-extrabold rounded-xl shadow-xs transition-colors cursor-pointer"
             >
               {isSubmitting ? 'Saving...' : 'Confirm Assignment'}
             </button>

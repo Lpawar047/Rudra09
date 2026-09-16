@@ -90,14 +90,14 @@ export function DataTable<T>({
 
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-2xs space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-          <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/4 animate-pulse"></div>
-          <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/6 animate-pulse"></div>
+      <div className="bg-[#FFFFFF] rounded-xl border border-[#D6D6D6] p-6 shadow-xs space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-[#E5E5E5]">
+          <div className="h-4 bg-[#E5E5E5] rounded w-1/4 animate-pulse"></div>
+          <div className="h-4 bg-[#E5E5E5] rounded w-1/6 animate-pulse"></div>
         </div>
         <div className="space-y-3">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-14 bg-slate-100/80 dark:bg-slate-800/60 rounded-xl animate-pulse"></div>
+            <div key={i} className="h-14 bg-[#F2F2F2] rounded-lg animate-pulse"></div>
           ))}
         </div>
       </div>
@@ -105,14 +105,14 @@ export function DataTable<T>({
   }
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col transition-colors">
+    <div className="bg-[#FFFFFF] rounded-xl border border-[#D6D6D6] shadow-xs overflow-hidden flex flex-col transition-colors">
       {/* Mobile Card View (< 768px) if renderMobileCard is provided */}
       {renderMobileCard && (
-        <div className="block md:hidden p-3 sm:p-4 space-y-3 bg-slate-50/70 dark:bg-slate-950/40 border-b border-slate-200 dark:border-slate-800">
+        <div className="block md:hidden p-3 sm:p-4 space-y-3 bg-[#FAFAFA] border-b border-[#D6D6D6]">
           {paginatedData.length === 0 ? (
-            <div className="p-8 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
-              <Inbox className="w-8 h-8 text-slate-400 dark:text-slate-500 mx-auto" />
-              <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{emptyMessage}</p>
+            <div className="p-8 text-center bg-[#FFFFFF] rounded-xl border border-[#D6D6D6] space-y-2">
+              <Inbox className="w-8 h-8 text-[#666666] mx-auto" />
+              <p className="text-sm font-bold text-[#111111]">{emptyMessage}</p>
             </div>
           ) : (
             paginatedData.map((row) => (
@@ -126,8 +126,8 @@ export function DataTable<T>({
 
       {/* Desktop & Tablet Table View */}
       <div className={`${renderMobileCard ? 'hidden md:block' : 'block'} overflow-x-auto w-full scrollbar-thin`}>
-        <table className="w-full text-left text-sm text-slate-900 dark:text-slate-200 border-collapse">
-          <thead className="bg-[#EEF2FF] dark:bg-slate-800 text-[#1E1B4B] dark:text-indigo-200 font-extrabold uppercase tracking-wider text-xs border-b border-[#E2E8F0] dark:border-slate-700">
+        <table className="w-full text-left text-[14px] text-[#111111] border-collapse font-sans">
+          <thead className="bg-[#111111] text-[#FFFFFF] font-semibold uppercase tracking-wider text-[12px] sm:text-[13px] border-b border-[#000000]">
             <tr>
               {columns.map((col, idx) => {
                 const alignment = col.align === 'right' ? 'justify-end text-right' : col.align === 'center' ? 'justify-center text-center' : 'justify-start text-left';
@@ -140,37 +140,37 @@ export function DataTable<T>({
                   <th
                     key={idx}
                     style={{ minWidth: col.minWidth, ...stickyStyles }}
-                    className={`px-4 py-3.5 whitespace-nowrap select-none bg-[#EEF2FF] dark:bg-slate-800 ${
+                    className={`px-4 py-3.5 whitespace-nowrap select-none bg-[#111111] text-[#FFFFFF] font-semibold ${
                       col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'
                     } ${
                       isSticky && col.stickyShadow
-                        ? 'border-r border-[#CBD5E1] dark:border-slate-700 shadow-[4px_0_8px_-3px_rgba(0,0,0,0.08)]'
+                        ? 'border-r border-[#333333] shadow-[4px_0_8px_-3px_rgba(0,0,0,0.25)]'
                         : ''
                     } ${col.headerClassName || ''}`}
                     onClick={() => col.sortable && handleSort(idx)}
                   >
-                    <div className={`flex items-center gap-1.5 ${alignment} ${col.sortable ? 'cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-300' : ''}`}>
+                    <div className={`flex items-center gap-1.5 ${alignment} ${col.sortable ? 'cursor-pointer hover:text-[#FACC15] transition-colors' : ''}`}>
                       <span>{col.header}</span>
-                      {col.sortable && <ArrowUpDown className="w-3.5 h-3.5 text-indigo-400 dark:text-indigo-400 shrink-0" />}
+                      {col.sortable && <ArrowUpDown className="w-3.5 h-3.5 text-[#FACC15] shrink-0" />}
                     </div>
                   </th>
                 );
               })}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium bg-white dark:bg-slate-900">
+          <tbody className="divide-y divide-[#E5E5E5] font-normal text-[14px] bg-[#FFFFFF]">
             {paginatedData.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-16 text-center text-slate-500 dark:text-slate-400 font-bold">
+                <td colSpan={columns.length} className="px-4 py-16 text-center text-[#666666] font-medium">
                   <div className="space-y-2">
-                    <Inbox className="w-9 h-9 text-slate-400 dark:text-slate-500 mx-auto" />
+                    <Inbox className="w-9 h-9 text-[#666666] mx-auto" />
                     <p className="text-sm font-semibold">{emptyMessage}</p>
                   </div>
                 </td>
               </tr>
             ) : (
               paginatedData.map((row) => (
-                <tr key={keyExtractor(row)} className="group hover:bg-[#F8FAFC] dark:hover:bg-slate-850 transition-colors">
+                <tr key={keyExtractor(row)} className="group hover:bg-[#FFFBE6] transition-colors">
                   {columns.map((col, idx) => {
                     const isSticky = isDesktopWidth && Boolean(col.stickyLeft);
                     const stickyStyles: React.CSSProperties = isSticky
@@ -181,13 +181,13 @@ export function DataTable<T>({
                       <td
                         key={idx}
                         style={{ minWidth: col.minWidth, ...stickyStyles }}
-                        className={`px-4 py-3.5 text-slate-900 dark:text-slate-100 ${
-                          isSticky ? 'bg-white dark:bg-slate-900 group-hover:bg-[#F8FAFC] dark:group-hover:bg-slate-850' : ''
+                        className={`px-4 py-3.5 text-[#111111] ${
+                          isSticky ? 'bg-[#FFFFFF] group-hover:bg-[#FFFBE6]' : ''
                         } ${
                           col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'
                         } ${
                           isSticky && col.stickyShadow
-                            ? 'border-r border-slate-200 dark:border-slate-800 shadow-[4px_0_8px_-3px_rgba(0,0,0,0.08)]'
+                            ? 'border-r border-[#D6D6D6] shadow-[4px_0_8px_-3px_rgba(0,0,0,0.06)]'
                             : ''
                         } ${col.className || ''}`}
                       >
@@ -207,21 +207,21 @@ export function DataTable<T>({
       </div>
 
       {/* Pagination Footer */}
-      <div className="bg-slate-50/90 dark:bg-slate-850/90 px-4 py-3 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+      <div className="bg-[#FAFAFA] px-4 py-3 border-t border-[#D6D6D6] flex flex-col sm:flex-row items-center justify-between gap-3 text-[13px] sm:text-[14px] text-[#111111]">
         <div className="flex flex-wrap items-center gap-3">
           <div>
-            Showing <span className="font-bold text-slate-900 dark:text-white">{totalRecords === 0 ? 0 : startIndex + 1}</span> to{' '}
-            <span className="font-bold text-slate-900 dark:text-white">{Math.min(startIndex + currentLimit, totalRecords)}</span> of{' '}
-            <span className="font-bold text-slate-900 dark:text-white">{totalRecords}</span> records
+            Showing <span className="font-semibold text-[#000000] tabular-nums">{totalRecords === 0 ? 0 : startIndex + 1}</span> to{' '}
+            <span className="font-semibold text-[#000000] tabular-nums">{Math.min(startIndex + currentLimit, totalRecords)}</span> of{' '}
+            <span className="font-semibold text-[#000000] tabular-nums">{totalRecords}</span> records
           </div>
 
           {isServer && serverPagination?.onLimitChange && (
             <div className="flex items-center gap-1.5 ml-0 sm:ml-2">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Per page:</span>
+              <span className="text-xs font-semibold text-[#666666]">Per page:</span>
               <select
                 value={serverPagination.limit}
                 onChange={(e) => serverPagination.onLimitChange!(parseInt(e.target.value, 10))}
-                className="min-h-[36px] px-2.5 py-1 text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                className="min-h-[36px] px-2.5 py-1 text-xs bg-[#FFFFFF] border border-[#D6D6D6] rounded-lg font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#FACC15]"
               >
                 <option value={20}>20</option>
                 <option value={50}>50</option>
@@ -235,35 +235,39 @@ export function DataTable<T>({
           <button
             onClick={() => handlePageChange(1)}
             disabled={currentPage === 1}
-            className="min-h-[40px] min-w-[40px] sm:min-h-[36px] sm:min-w-[36px] flex items-center justify-center p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-slate-800 transition-colors"
+            className="min-h-[40px] min-w-[40px] sm:min-h-[36px] sm:min-w-[36px] flex items-center justify-center p-2 rounded-lg bg-[#FFFFFF] border border-[#D6D6D6] text-[#111111] hover:bg-[#F2F2F2] disabled:opacity-40 disabled:hover:bg-[#FFFFFF] transition-colors cursor-pointer"
             title="First Page"
+            aria-label="First Page"
           >
             <ChevronsLeft className="w-4 h-4" />
           </button>
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className="min-h-[40px] min-w-[40px] sm:min-h-[36px] sm:min-w-[36px] flex items-center justify-center p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-slate-800 transition-colors"
+            className="min-h-[40px] min-w-[40px] sm:min-h-[36px] sm:min-w-[36px] flex items-center justify-center p-2 rounded-lg bg-[#FFFFFF] border border-[#D6D6D6] text-[#111111] hover:bg-[#F2F2F2] disabled:opacity-40 disabled:hover:bg-[#FFFFFF] transition-colors cursor-pointer"
             title="Previous Page"
+            aria-label="Previous Page"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <span className="px-3.5 py-2 sm:py-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
+          <span className="px-3.5 py-2 sm:py-1 bg-[#FFFFFF] border border-[#D6D6D6] rounded-lg font-semibold text-[#000000] text-xs sm:text-sm tabular-nums">
             Page {currentPage} of {totalPages}
           </span>
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="min-h-[40px] min-w-[40px] sm:min-h-[36px] sm:min-w-[36px] flex items-center justify-center p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-slate-800 transition-colors"
+            className="min-h-[40px] min-w-[40px] sm:min-h-[36px] sm:min-w-[36px] flex items-center justify-center p-2 rounded-lg bg-[#FFFFFF] border border-[#D6D6D6] text-[#111111] hover:bg-[#F2F2F2] disabled:opacity-40 disabled:hover:bg-[#FFFFFF] transition-colors cursor-pointer"
             title="Next Page"
+            aria-label="Next Page"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
           <button
             onClick={() => handlePageChange(totalPages)}
             disabled={currentPage === totalPages}
-            className="min-h-[40px] min-w-[40px] sm:min-h-[36px] sm:min-w-[36px] flex items-center justify-center p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white disabled:opacity-40 disabled:hover:bg-white dark:disabled:hover:bg-slate-800 transition-colors"
+            className="min-h-[40px] min-w-[40px] sm:min-h-[36px] sm:min-w-[36px] flex items-center justify-center p-2 rounded-lg bg-[#FFFFFF] border border-[#D6D6D6] text-[#111111] hover:bg-[#F2F2F2] disabled:opacity-40 disabled:hover:bg-[#FFFFFF] transition-colors cursor-pointer"
             title="Last Page"
+            aria-label="Last Page"
           >
             <ChevronsRight className="w-4 h-4" />
           </button>
@@ -272,4 +276,3 @@ export function DataTable<T>({
     </div>
   );
 }
-

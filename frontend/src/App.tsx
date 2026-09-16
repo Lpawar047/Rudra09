@@ -43,8 +43,8 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles?: strin
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-4 border-indigo-500 border-t-transparent" />
+      <div className="min-h-screen bg-[#111111] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#FACC15] border-t-transparent" />
       </div>
     );
   }

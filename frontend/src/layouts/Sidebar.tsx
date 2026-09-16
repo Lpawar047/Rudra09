@@ -6,7 +6,6 @@ import {
   FileSpreadsheet,
   Users,
   UserCheck,
-  ShieldCheck,
   Truck,
   Building2,
   PhoneCall,
@@ -72,35 +71,43 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
       {/* Mobile Backdrop */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-xs lg:hidden"
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
       <aside
-        className={`fixed top-0 left-0 bottom-0 z-40 w-64 bg-slate-900 border-r border-slate-800 text-slate-300 flex flex-col transition-all duration-200 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 left-0 bottom-0 z-40 w-64 bg-[#111111] border-r border-[#1F1F1F] text-[#FFFFFF] flex flex-col transition-all duration-200 ease-in-out lg:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         } shadow-2xl lg:shadow-none`}
       >
         {/* Brand Header */}
-        <div className="h-20 px-4 flex items-center justify-between border-b border-slate-800 bg-slate-950/70">
+        <div className="h-20 px-4 flex items-center justify-between border-b border-[#1F1F1F] bg-[#000000]">
           <div className="flex items-center gap-3">
-            <img src="/rudra-logo.jpg" alt="Rudra Services" className="h-11 w-auto rounded-xl object-contain bg-white p-1 border border-slate-700 shadow-md" />
+            <img
+              src="/rudra-logo.jpg"
+              alt="Rudra Services"
+              className="h-11 w-auto rounded-lg object-contain bg-white p-1 border border-[#333333] shadow-xs"
+            />
             <div>
-              <h1 className="font-black text-white tracking-tight text-base leading-tight">RUDRA SERVICES</h1>
-              <p className="text-[11px] text-indigo-400 font-bold tracking-tight">Recovery & Repo Platform</p>
+              <h1 className="font-heading font-bold text-[#FFFFFF] tracking-tight text-base leading-tight">
+                RUDRA SERVICES
+              </h1>
+              <p className="text-[11px] text-[#FACC15] font-medium tracking-wide">
+                Recovery & Repo Platform
+              </p>
             </div>
           </div>
         </div>
 
         {/* User Card */}
-        <div className="p-3.5 mx-3 my-3 rounded-xl bg-slate-800/80 border border-slate-700/80 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-indigo-600 text-white font-extrabold flex items-center justify-center text-sm shadow-md border border-indigo-500 shrink-0">
+        <div className="p-3.5 mx-3 my-3 rounded-xl bg-[#1F1F1F] border border-[#333333] flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-[#FACC15] text-[#000000] font-bold flex items-center justify-center text-sm shadow-xs border border-[#EAB308] shrink-0">
             {user.name.charAt(0)}
           </div>
           <div className="overflow-hidden">
-            <p className="text-sm font-bold text-white truncate">{user.name}</p>
-            <span className="inline-block mt-0.5 text-[10px] px-2 py-0.5 rounded-md font-extrabold tracking-wider bg-indigo-950 text-indigo-300 uppercase border border-indigo-800">
+            <p className="text-sm font-semibold text-[#FFFFFF] truncate">{user.name}</p>
+            <span className="inline-block mt-0.5 text-[10px] px-2 py-0.5 rounded font-bold tracking-wider bg-[#000000] text-[#FACC15] uppercase border border-[#FACC15]/40">
               {user.role}
             </span>
           </div>
@@ -116,10 +123,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
                 to={link.path}
                 onClick={() => setMobileOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3.5 min-h-[42px] rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                  `flex items-center gap-3 px-3.5 min-h-[42px] rounded-xl text-[14px] transition-all font-sans ${
                     isActive
-                      ? 'bg-indigo-600 text-white font-black shadow-md shadow-indigo-500/20'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
+                      ? 'bg-[#FACC15] text-[#000000] font-semibold shadow-xs'
+                      : 'text-[#CCCCCC] hover:text-[#FFFFFF] hover:bg-[#1F1F1F] font-medium'
                   }`
                 }
               >
@@ -131,12 +138,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
         </nav>
 
         {/* Footer Logout */}
-        <div className="p-3 border-t border-slate-800 bg-slate-950/50">
+        <div className="p-3 border-t border-[#1F1F1F] bg-[#000000]">
           <button
             onClick={logout}
-            className="w-full flex items-center gap-3 px-3.5 min-h-[42px] rounded-xl text-xs font-bold uppercase tracking-wider text-rose-400 hover:bg-rose-950/50 hover:text-rose-300 transition-colors border border-transparent hover:border-rose-800/50 cursor-pointer"
+            className="w-full flex items-center gap-3 px-3.5 min-h-[42px] rounded-xl text-[14px] font-medium text-[#CCCCCC] hover:bg-[#1F1F1F] hover:text-[#FFFFFF] transition-colors border border-transparent cursor-pointer"
           >
-            <LogOut className="w-4 h-4 shrink-0" />
+            <LogOut className="w-4 h-4 shrink-0 text-[#CCCCCC]" />
             <span>Sign Out</span>
           </button>
         </div>
@@ -144,5 +151,3 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
     </>
   );
 };
-
-

@@ -171,8 +171,10 @@ async function updateUserStatus(req, res) {
             return res.json({ message: 'Employee account disabled successfully.' });
         }
         else if (status === 'ACTIVE') {
+            const wasDisabled = existing.rows[0].status === 'DISABLED';
+            const actionName = wasDisabled ? 'EMPLOYEE_REACTIVATED' : 'EMPLOYEE_APPROVED';
             await (0, db_1.query)(`UPDATE users SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`, ['ACTIVE', id]);
-            await (0, db_1.query)('INSERT INTO activity_logs (user_id, action, details) VALUES ($1, $2, $3)', [adminUser.id, 'ACTIVATE_USER', `Admin activated user ID ${id} (${existing.rows[0].email})`]);
+            await (0, db_1.query)('INSERT INTO activity_logs (user_id, action, details) VALUES ($1, $2, $3)', [adminUser.id, actionName, `Admin approved/activated user ID ${id} (${existing.rows[0].email})`]);
             return res.json({ message: 'Employee account activated successfully.' });
         }
         else {

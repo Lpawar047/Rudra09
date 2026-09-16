@@ -35,44 +35,44 @@ export const EmployeePayments: React.FC = () => {
   const columns: Column<Payment>[] = [
     {
       header: 'Receipt ID',
-      accessor: (row) => <span className="font-bold text-slate-900 dark:text-white font-mono">#RCT-{row.id}</span>,
+      accessor: (row) => <span className="font-black text-[#111111] font-mono">#RCT-{row.id}</span>,
     },
     {
       header: 'Loan Account',
-      accessor: (row) => <span className="font-mono font-bold text-xs text-slate-900 dark:text-white">{row.loan_account_number}</span>,
+      accessor: (row) => <span className="font-mono font-bold text-xs text-[#111111]">{row.loan_account_number}</span>,
     },
     {
       header: 'Borrower',
-      accessor: (row) => <span className="font-semibold text-slate-800 dark:text-slate-200">{row.customer_name}</span>,
+      accessor: (row) => <span className="font-bold text-[#111111]">{row.customer_name}</span>,
     },
     {
       header: 'Payment Mode',
       accessor: (row) => (
-        <span className="font-bold text-xs bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700">
+        <span className="font-bold text-xs bg-[#111111] text-[#FFFFFF] px-2.5 py-1 rounded-md border border-[#333333]">
           {row.payment_mode}
         </span>
       ),
     },
     {
       header: 'Reference / Cheque No',
-      accessor: (row) => <span className="font-mono text-xs text-slate-700 dark:text-slate-300">{row.transaction_ref || 'N/A'}</span>,
+      accessor: (row) => <span className="font-mono text-xs text-[#111111]">{row.transaction_ref || 'N/A'}</span>,
     },
     {
       header: 'Amount Collected',
-      accessor: (row) => <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono text-sm">{formatCurrency(row.amount)}</span>,
+      accessor: (row) => <span className="font-black text-[#111111] font-mono text-sm">{formatCurrency(row.amount)}</span>,
       sortable: true,
     },
     {
       header: 'Date & Time',
-      accessor: (row) => <span className="text-slate-700 dark:text-slate-300">{new Date(row.payment_date).toLocaleString()}</span>,
+      accessor: (row) => <span className="text-[#111111]">{new Date(row.payment_date).toLocaleString()}</span>,
     },
   ];
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">My Collection Receipts</h1>
-        <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1">Record of payment collections, UPI deposits, and cheque receipts collected by you.</p>
+        <h1 className="text-2xl font-black text-[#111111] tracking-tight">My Collection Receipts</h1>
+        <p className="text-xs text-[#666666] font-medium mt-1">Record of payment collections, UPI deposits, and cheque receipts collected by you.</p>
       </div>
 
       <DataTable

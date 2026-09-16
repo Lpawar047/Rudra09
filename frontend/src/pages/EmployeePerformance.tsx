@@ -35,8 +35,8 @@ export const EmployeePerformance: React.FC = () => {
   if (isLoading || !metrics) {
     return (
       <div className="py-12 text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-amber-500 border-t-transparent"></div>
-        <p className="mt-3 text-sm text-slate-500 font-medium">Loading Performance Summary...</p>
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[#FACC15] border-t-transparent"></div>
+        <p className="mt-3 text-sm text-[#666666] font-medium">Loading Performance Summary...</p>
       </div>
     );
   }
@@ -44,8 +44,8 @@ export const EmployeePerformance: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Personal Recovery Performance</h1>
-        <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1">Key performance metrics, resolution rate, and collection metrics.</p>
+        <h1 className="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight">Personal Recovery Performance</h1>
+        <p className="text-xs text-[#666666] font-medium mt-1">Key performance metrics, resolution rate, and collection metrics.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -54,32 +54,24 @@ export const EmployeePerformance: React.FC = () => {
           value={metrics.total_cases}
           subtext="Total cases assigned"
           icon={FolderOpen}
-          colorBg="bg-blue-50 dark:bg-blue-950/60"
-          colorText="text-blue-600 dark:text-blue-400"
         />
         <DashboardCard
           title="Total Recovered"
           value={formatCurrency(metrics.total_collected_amount)}
           subtext="Collected by you"
           icon={CheckCircle2}
-          colorBg="bg-emerald-50 dark:bg-emerald-950/60"
-          colorText="text-emerald-600 dark:text-emerald-400"
         />
         <DashboardCard
           title="Pending Portfolio POS"
           value={formatCurrency(metrics.total_outstanding_amount)}
           subtext="Outstanding balance"
           icon={IndianRupee}
-          colorBg="bg-rose-50 dark:bg-rose-950/60"
-          colorText="text-rose-600 dark:text-rose-400"
         />
         <DashboardCard
           title="Personal Recovery Rate"
           value={`${metrics.recovery_percentage}%`}
           subtext="Collection success ratio"
           icon={TrendingUp}
-          colorBg="bg-indigo-50 dark:bg-indigo-950/60"
-          colorText="text-indigo-600 dark:text-indigo-400"
         />
       </div>
     </div>

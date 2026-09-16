@@ -34,12 +34,15 @@ async function seed() {
         { name: 'Rahul Verma', email: 'rahul@rudraservices.com', pass: empPasswordHash, role: 'EMPLOYEE', phone: '+91 98765 11223', dept: 'Field Recovery Team A', status: 'ACTIVE' },
         { name: 'Priya Patel', email: 'priya@rudraservices.com', pass: empPasswordHash, role: 'EMPLOYEE', phone: '+91 98765 33445', dept: 'Field Recovery Team B', status: 'ACTIVE' },
         { name: 'Amit Kumar', email: 'amit@rudraservices.com', pass: empPasswordHash, role: 'EMPLOYEE', phone: '+91 98765 55667', dept: 'Field Recovery Team B', status: 'ACTIVE' },
+        { name: 'Karan Mehra (Pending)', email: 'pending.emp@rudraservices.com', pass: empPasswordHash, role: 'EMPLOYEE', phone: '+91 98765 88990', dept: 'Field Recovery Team C', status: 'PENDING' },
+        { name: 'Siddharth Roy (Disabled)', email: 'disabled.emp@rudraservices.com', pass: empPasswordHash, role: 'EMPLOYEE', phone: '+91 98765 44332', dept: 'Field Recovery Team C', status: 'DISABLED' },
+        { name: 'Nikhil Joshi (Rejected)', email: 'rejected.emp@rudraservices.com', pass: empPasswordHash, role: 'EMPLOYEE', phone: '+91 98765 11998', dept: 'Field Recovery Team C', status: 'REJECTED', reason: 'Invalid address documentation provided.' },
     ];
     const userIds = {};
     for (const u of usersData) {
-        const res = await (0, db_1.query)(`INSERT INTO users (name, email, password_hash, role, phone, department, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING id`, [u.name, u.email, u.pass, u.role, u.phone, u.dept, u.status]);
+        const res = await (0, db_1.query)(`INSERT INTO users (name, email, password_hash, role, phone, department, status, rejection_reason)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING id`, [u.name, u.email, u.pass, u.role, u.phone, u.dept, u.status, u.reason || null]);
         userIds[u.email] = res.rows.length > 0 ? res.rows[0].id : res.lastID;
     }
     console.log('✅ Users seeded: Admin, 2 Managers, 4 Employees');

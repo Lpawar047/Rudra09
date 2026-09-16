@@ -172,18 +172,18 @@ export const AdminEmployees: React.FC = () => {
   const columns: Column<User>[] = [
     {
       header: 'Employee ID',
-      accessor: (row) => <span className="font-bold text-slate-900 dark:text-white">#EMP-{row.id}</span>,
+      accessor: (row) => <span className="font-bold text-[#111111]">#EMP-{row.id}</span>,
     },
     {
       header: 'Name',
       accessor: (row) => (
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-full bg-indigo-600 text-white font-extrabold flex items-center justify-center text-xs shadow-xs border border-indigo-700 shrink-0">
+          <div className="w-9 h-9 rounded-full bg-[#111111] text-[#FACC15] font-black flex items-center justify-center text-xs shadow-xs border border-[#333333] shrink-0">
             {row.name.charAt(0)}
           </div>
           <div>
-            <span className="font-bold text-slate-900 dark:text-white block leading-tight">{row.name}</span>
-            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">{row.email}</span>
+            <span className="font-black text-[#111111] block leading-tight">{row.name}</span>
+            <span className="text-[11px] font-medium text-[#666666]">{row.email}</span>
           </div>
         </div>
       ),
@@ -191,11 +191,11 @@ export const AdminEmployees: React.FC = () => {
     },
     {
       header: 'Phone',
-      accessor: (row) => <span className="font-semibold text-slate-800 dark:text-slate-200">{row.phone || 'N/A'}</span>,
+      accessor: (row) => <span className="font-semibold text-[#111111]">{row.phone || 'N/A'}</span>,
     },
     {
       header: 'Department',
-      accessor: (row) => <span className="font-semibold text-slate-800 dark:text-slate-200">{row.department || 'Field Ops'}</span>,
+      accessor: (row) => <span className="font-semibold text-[#111111]">{row.department || 'Field Ops'}</span>,
     },
     {
       header: 'Status',
@@ -206,7 +206,7 @@ export const AdminEmployees: React.FC = () => {
             <button
               onClick={() => setViewingRejection(row)}
               title="View Rejection Reason"
-              className="p-1.5 text-rose-700 dark:text-rose-300 hover:text-rose-900 dark:hover:text-rose-100 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/60 rounded-lg border border-rose-200 dark:border-rose-800 transition-colors"
+              className="p-1.5 text-[#000000] hover:text-[#000000] bg-[#FEF9C3] rounded-lg border border-[#EAB308]/40 transition-colors"
             >
               <Info className="w-3.5 h-3.5" />
             </button>
@@ -223,14 +223,14 @@ export const AdminEmployees: React.FC = () => {
             <>
               <button
                 onClick={() => handleApprove(row)}
-                className="min-h-[38px] sm:min-h-[32px] inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition-colors shadow-2xs"
+                className="min-h-[38px] sm:min-h-[32px] inline-flex items-center gap-1 px-3 py-1.5 bg-[#FACC15] hover:bg-[#FFD600] text-[#000000] font-black text-xs rounded-lg transition-colors border border-[#EAB308] shadow-2xs"
                 title="Approve Employee Registration"
               >
                 <CheckCircle className="w-3.5 h-3.5" /> Approve
               </button>
               <button
                 onClick={() => handleOpenRejectModal(row)}
-                className="min-h-[38px] sm:min-h-[32px] inline-flex items-center gap-1 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-lg transition-colors shadow-2xs"
+                className="min-h-[38px] sm:min-h-[32px] inline-flex items-center gap-1 px-3 py-1.5 bg-[#1F1F1F] hover:bg-[#333333] text-[#D6D6D6] hover:text-white font-bold text-xs rounded-lg transition-colors border border-[#333333] shadow-2xs"
                 title="Reject Registration"
               >
                 <XCircle className="w-3.5 h-3.5" /> Reject
@@ -242,10 +242,10 @@ export const AdminEmployees: React.FC = () => {
           {row.status === 'ACTIVE' && (
             <button
               onClick={() => handleDisable(row)}
-              className="min-h-[38px] sm:min-h-[32px] inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs rounded-lg border border-slate-300 dark:border-slate-700 transition-colors"
+              className="min-h-[38px] sm:min-h-[32px] inline-flex items-center gap-1 px-3 py-1.5 bg-[#F2F2F2] hover:bg-[#D6D6D6] text-[#111111] font-bold text-xs rounded-lg border border-[#D6D6D6] transition-colors"
               title="Disable Employee Account"
             >
-              <Ban className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" /> Disable
+              <Ban className="w-3.5 h-3.5 text-[#666666]" /> Disable
             </button>
           )}
 
@@ -253,7 +253,7 @@ export const AdminEmployees: React.FC = () => {
           {row.status === 'DISABLED' && (
             <button
               onClick={() => handleReactivate(row)}
-              className="min-h-[38px] sm:min-h-[32px] inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition-colors shadow-2xs"
+              className="min-h-[38px] sm:min-h-[32px] inline-flex items-center gap-1 px-3 py-1.5 bg-[#FACC15] hover:bg-[#FFD600] text-[#000000] font-black text-xs rounded-lg transition-colors border border-[#EAB308] shadow-2xs"
               title="Reactivate Employee Account"
             >
               <RefreshCw className="w-3.5 h-3.5" /> Reactivate
@@ -264,7 +264,7 @@ export const AdminEmployees: React.FC = () => {
           {row.status === 'REJECTED' && (
             <button
               onClick={() => handleApprove(row)}
-              className="min-h-[38px] sm:min-h-[32px] inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg transition-colors shadow-2xs"
+              className="min-h-[38px] sm:min-h-[32px] inline-flex items-center gap-1 px-3 py-1.5 bg-[#FACC15] hover:bg-[#FFD600] text-[#000000] font-black text-xs rounded-lg transition-colors border border-[#EAB308] shadow-2xs"
               title="Re-evaluate & Activate"
             >
               <CheckCircle className="w-3.5 h-3.5" /> Approve
@@ -279,14 +279,14 @@ export const AdminEmployees: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => handleOpenEdit(row)}
-            className="min-h-[38px] min-w-[38px] sm:min-h-[32px] sm:min-w-[32px] flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors border border-slate-200 dark:border-slate-700"
+            className="min-h-[38px] min-w-[38px] sm:min-h-[32px] sm:min-w-[32px] flex items-center justify-center rounded-lg bg-[#F2F2F2] hover:bg-[#D6D6D6] text-[#111111] transition-colors border border-[#D6D6D6]"
             title="Edit User Info"
           >
             <Edit className="w-4 h-4" />
           </button>
           <button
             onClick={() => handleDelete(row.id)}
-            className="min-h-[38px] min-w-[38px] sm:min-h-[32px] sm:min-w-[32px] flex items-center justify-center rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-400 transition-colors border border-rose-200 dark:border-rose-800"
+            className="min-h-[38px] min-w-[38px] sm:min-h-[32px] sm:min-w-[32px] flex items-center justify-center rounded-lg bg-[#1F1F1F] hover:bg-[#333333] text-[#D6D6D6] hover:text-white transition-colors border border-[#333333]"
             title="Delete User"
           >
             <Trash2 className="w-4 h-4" />
@@ -300,27 +300,27 @@ export const AdminEmployees: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Field Employees</h1>
-          <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1">Manage field recovery officers, status permissions, approvals, and account access.</p>
+          <h1 className="text-2xl font-black text-[#111111] tracking-tight">Field Employees</h1>
+          <p className="text-xs text-[#666666] font-medium mt-1">Manage field recovery officers, status permissions, approvals, and account access.</p>
         </div>
         <button
           onClick={handleOpenAdd}
-          className="min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors"
+          className="min-h-[44px] inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#FACC15] hover:bg-[#FFD600] text-[#000000] font-black text-xs rounded-xl shadow-xs transition-colors border border-[#EAB308]"
         >
           <UserPlus className="w-4 h-4" /> Add Field Officer
         </button>
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex flex-wrap items-center gap-2 bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold w-fit shadow-2xs">
+      <div className="flex flex-wrap items-center gap-2 bg-white p-1.5 rounded-xl border border-[#D6D6D6] text-xs font-bold w-fit shadow-2xs">
         {['ALL', 'ACTIVE', 'PENDING', 'DISABLED', 'REJECTED'].map((st) => (
           <button
             key={st}
             onClick={() => setStatusFilter(st)}
-            className={`min-h-[38px] px-3.5 py-1.5 rounded-lg transition-all ${
+            className={`min-h-[38px] px-3.5 py-1.5 rounded-lg font-black transition-all ${
               statusFilter === st
-                ? 'bg-indigo-600 text-white shadow-2xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                ? 'bg-[#111111] text-[#FFFFFF] shadow-2xs'
+                : 'text-[#666666] hover:text-[#000000] hover:bg-[#F2F2F2]'
             }`}
           >
             {st} {st !== 'ALL' && `(${employees.filter(e => e.status === st).length})`}
@@ -335,15 +335,15 @@ export const AdminEmployees: React.FC = () => {
         isLoading={isLoading}
         emptyMessage="No employee accounts found for the selected status."
         renderMobileCard={(item) => (
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 space-y-3 shadow-2xs">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+          <div className="bg-white rounded-xl border border-[#D6D6D6] p-4 space-y-3 shadow-2xs">
+            <div className="flex items-center justify-between border-b border-[#D6D6D6] pb-2">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-full bg-indigo-600 text-white font-extrabold flex items-center justify-center text-xs shadow-xs border border-indigo-700 shrink-0">
+                <div className="w-9 h-9 rounded-full bg-[#111111] text-[#FACC15] font-black flex items-center justify-center text-xs shadow-xs border border-[#333333] shrink-0">
                   {item.name.charAt(0)}
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-slate-900 dark:text-white text-sm leading-snug">{item.name}</h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{item.email}</p>
+                  <h4 className="font-black text-[#111111] text-sm leading-snug">{item.name}</h4>
+                  <p className="text-xs text-[#666666] font-medium">{item.email}</p>
                 </div>
               </div>
               <StatusBadge status={item.status} />
@@ -351,30 +351,30 @@ export const AdminEmployees: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
-                <span className="text-slate-500 dark:text-slate-400 font-extrabold block text-[10px] uppercase">Employee ID</span>
-                <span className="font-bold text-slate-900 dark:text-white">#EMP-{item.id}</span>
+                <span className="text-[#666666] font-black block text-[10px] uppercase">Employee ID</span>
+                <span className="font-bold text-[#111111]">#EMP-{item.id}</span>
               </div>
               <div>
-                <span className="text-slate-500 dark:text-slate-400 font-extrabold block text-[10px] uppercase">Phone</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200">{item.phone || 'N/A'}</span>
+                <span className="text-[#666666] font-black block text-[10px] uppercase">Phone</span>
+                <span className="font-semibold text-[#111111]">{item.phone || 'N/A'}</span>
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-              <span className="text-slate-600 dark:text-slate-400 font-medium">Dept: <strong className="text-slate-900 dark:text-white">{item.department || 'Field Ops'}</strong></span>
+            <div className="flex items-center justify-between pt-2 border-t border-[#D6D6D6] text-xs">
+              <span className="text-[#666666] font-medium">Dept: <strong className="text-[#111111]">{item.department || 'Field Ops'}</strong></span>
               
               <div className="flex items-center gap-1.5">
                 {item.status === 'PENDING' && (
                   <>
                     <button
                       onClick={() => handleApprove(item)}
-                      className="min-h-[40px] px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg"
+                      className="min-h-[40px] px-3 py-1.5 bg-[#FACC15] hover:bg-[#FFD600] text-[#000000] font-black rounded-lg border border-[#EAB308]"
                     >
                       Approve
                     </button>
                     <button
                       onClick={() => handleOpenRejectModal(item)}
-                      className="min-h-[40px] px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg"
+                      className="min-h-[40px] px-3 py-1.5 bg-[#1F1F1F] hover:bg-[#333333] text-[#D6D6D6] hover:text-white font-bold rounded-lg border border-[#333333]"
                     >
                       Reject
                     </button>
@@ -383,7 +383,7 @@ export const AdminEmployees: React.FC = () => {
                 {item.status === 'ACTIVE' && (
                   <button
                     onClick={() => handleDisable(item)}
-                    className="min-h-[40px] px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold rounded-lg"
+                    className="min-h-[40px] px-3 py-1.5 bg-[#F2F2F2] hover:bg-[#D6D6D6] text-[#111111] border border-[#D6D6D6] font-bold rounded-lg"
                   >
                     Disable
                   </button>
@@ -391,21 +391,21 @@ export const AdminEmployees: React.FC = () => {
                 {item.status === 'DISABLED' && (
                   <button
                     onClick={() => handleReactivate(item)}
-                    className="min-h-[40px] px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg"
+                    className="min-h-[40px] px-3 py-1.5 bg-[#FACC15] hover:bg-[#FFD600] text-[#000000] font-black rounded-lg border border-[#EAB308]"
                   >
                     Reactivate
                   </button>
                 )}
                 <button
                   onClick={() => handleOpenEdit(item)}
-                  className="min-h-[40px] p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg border border-slate-200 dark:border-slate-700"
+                  className="min-h-[40px] p-2 bg-[#F2F2F2] hover:bg-[#D6D6D6] text-[#111111] rounded-lg border border-[#D6D6D6]"
                   title="Edit"
                 >
                   <Edit className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => handleDelete(item.id)}
-                  className="min-h-[40px] p-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-400 rounded-lg border border-rose-200 dark:border-rose-800"
+                  className="min-h-[40px] p-2 bg-[#1F1F1F] hover:bg-[#333333] text-[#D6D6D6] hover:text-white rounded-lg border border-[#333333]"
                   title="Delete"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -425,29 +425,29 @@ export const AdminEmployees: React.FC = () => {
       >
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div>
-            <label className="block font-bold text-slate-800 dark:text-slate-200 mb-1.5">Full Name</label>
+            <label className="block font-black text-[#111111] mb-1.5">Full Name</label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="min-h-[44px] w-full px-3.5 py-2.5 bg-white dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 focus:outline-none"
+              className="min-h-[44px] w-full px-3.5 py-2.5 bg-white border border-[#D6D6D6] rounded-xl font-medium text-[#111111] placeholder:text-[#666666]:text-[#999999] focus:ring-2 focus:ring-[#FACC15] focus:border-[#EAB308] focus:outline-none"
               placeholder="e.g. Rahul Sharma"
             />
           </div>
           <div>
-            <label className="block font-bold text-slate-800 dark:text-slate-200 mb-1.5">Email Address</label>
+            <label className="block font-black text-[#111111] mb-1.5">Email Address</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="min-h-[44px] w-full px-3.5 py-2.5 bg-white dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 focus:outline-none"
+              className="min-h-[44px] w-full px-3.5 py-2.5 bg-white border border-[#D6D6D6] rounded-xl font-medium text-[#111111] placeholder:text-[#666666]:text-[#999999] focus:ring-2 focus:ring-[#FACC15] focus:border-[#EAB308] focus:outline-none"
               placeholder="rahul@rudraservices.com"
             />
           </div>
           <div>
-            <label className="block font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+            <label className="block font-black text-[#111111] mb-1.5">
               Password {editingUser && '(Leave blank to keep unchanged)'}
             </label>
             <input
@@ -455,27 +455,27 @@ export const AdminEmployees: React.FC = () => {
               required={!editingUser}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="min-h-[44px] w-full px-3.5 py-2.5 bg-white dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 focus:outline-none"
+              className="min-h-[44px] w-full px-3.5 py-2.5 bg-white border border-[#D6D6D6] rounded-xl font-medium text-[#111111] placeholder:text-[#666666]:text-[#999999] focus:ring-2 focus:ring-[#FACC15] focus:border-[#EAB308] focus:outline-none"
               placeholder="••••••••"
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block font-bold text-slate-800 dark:text-slate-200 mb-1.5">Phone Number</label>
+              <label className="block font-black text-[#111111] mb-1.5">Phone Number</label>
               <input
                 type="text"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="min-h-[44px] w-full px-3.5 py-2.5 bg-white dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 focus:outline-none"
+                className="min-h-[44px] w-full px-3.5 py-2.5 bg-white border border-[#D6D6D6] rounded-xl font-medium text-[#111111] placeholder:text-[#666666]:text-[#999999] focus:ring-2 focus:ring-[#FACC15] focus:border-[#EAB308] focus:outline-none"
                 placeholder="+91 98765 43210"
               />
             </div>
             <div>
-              <label className="block font-bold text-slate-800 dark:text-slate-200 mb-1.5">Account Status</label>
+              <label className="block font-black text-[#111111] mb-1.5">Account Status</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as UserStatus)}
-                className="min-h-[44px] w-full px-3.5 py-2.5 bg-white dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 focus:outline-none"
+                className="min-h-[44px] w-full px-3.5 py-2.5 bg-white border border-[#D6D6D6] rounded-xl font-black text-[#111111] focus:ring-2 focus:ring-[#FACC15] focus:border-[#EAB308] focus:outline-none"
               >
                 <option value="ACTIVE">ACTIVE</option>
                 <option value="PENDING">PENDING</option>
@@ -490,14 +490,14 @@ export const AdminEmployees: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowModal(false)}
-              className="min-h-[44px] px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-colors"
+              className="min-h-[44px] px-4 py-2.5 bg-[#F2F2F2] hover:bg-[#D6D6D6] text-[#111111] font-bold rounded-xl border border-[#D6D6D6] transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="min-h-[44px] px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors shadow-xs"
+              className="min-h-[44px] px-5 py-2.5 bg-[#FACC15] hover:bg-[#FFD600] text-[#000000] font-black rounded-xl transition-colors border border-[#EAB308] shadow-xs"
             >
               {isSubmitting ? 'Saving...' : 'Save Employee'}
             </button>
@@ -512,27 +512,27 @@ export const AdminEmployees: React.FC = () => {
         title={`Reject Account Registration — ${rejectingUser?.name}`}
       >
         <form onSubmit={handleConfirmReject} className="space-y-4 text-xs">
-          <div className="p-3.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-xl flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
-            <div className="text-rose-950 dark:text-rose-200">
-              <p className="font-bold">Important Notice</p>
-              <p className="text-xs mt-0.5 text-rose-800 dark:text-rose-300 font-medium">
-                Rejecting this account will set its status to <strong className="font-extrabold text-rose-950 dark:text-rose-100">REJECTED</strong>. 
+          <div className="p-3.5 bg-[#FEF9C3] border border-[#EAB308]/40 rounded-xl flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-[#EAB308] shrink-0 mt-0.5" />
+            <div className="text-[#111111]">
+              <p className="font-black">Important Notice</p>
+              <p className="text-xs mt-0.5 text-[#333333] font-medium">
+                Rejecting this account will set its status to <strong className="font-black text-[#111111]">REJECTED</strong>. 
                 If this user attempts to log in, they will receive: <em>"Your account registration was rejected by Admin."</em>
               </p>
             </div>
           </div>
 
           <div>
-            <label className="block font-bold text-slate-800 dark:text-slate-200 mb-1.5">
-              Rejection Reason <span className="text-rose-600">*</span>
+            <label className="block font-black text-[#111111] mb-1.5">
+              Rejection Reason <span className="text-[#EAB308]">*</span>
             </label>
             <textarea
               required
               rows={3}
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              className="w-full p-3 bg-white dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 rounded-xl font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 focus:outline-none"
+              className="w-full p-3 bg-white border border-[#D6D6D6] rounded-xl font-medium text-[#111111] placeholder:text-[#666666]:text-[#999999] focus:ring-2 focus:ring-[#FACC15] focus:border-[#EAB308] focus:outline-none"
               placeholder="e.g. Invalid employment documentation provided during registration."
             />
           </div>
@@ -541,14 +541,14 @@ export const AdminEmployees: React.FC = () => {
             <button
               type="button"
               onClick={() => setRejectingUser(null)}
-              className="min-h-[44px] px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl border border-slate-300 dark:border-slate-700 transition-colors"
+              className="min-h-[44px] px-4 py-2.5 bg-[#F2F2F2] hover:bg-[#D6D6D6] text-[#111111] font-bold rounded-xl border border-[#D6D6D6] transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isRejecting}
-              className="min-h-[44px] px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-xs transition-colors"
+              className="min-h-[44px] px-5 py-2.5 bg-[#1F1F1F] hover:bg-[#333333] text-white font-bold rounded-xl shadow-xs transition-colors border border-[#333333]"
             >
               {isRejecting ? 'Rejecting...' : 'Confirm Rejection'}
             </button>
@@ -563,26 +563,26 @@ export const AdminEmployees: React.FC = () => {
         title={`Rejection Details — ${viewingRejection?.name}`}
       >
         <div className="space-y-4 text-xs">
-          <div className="p-4 bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl space-y-2.5">
+          <div className="p-4 bg-[#FAFAFA] border border-[#D6D6D6] rounded-xl space-y-2.5">
             <div>
-              <span className="text-slate-500 dark:text-slate-400 block text-[10px] uppercase font-extrabold">Employee Name</span>
-              <span className="font-bold text-slate-900 dark:text-white">{viewingRejection?.name} ({viewingRejection?.email})</span>
+              <span className="text-[#666666] block text-[10px] uppercase font-black">Employee Name</span>
+              <span className="font-black text-[#111111]">{viewingRejection?.name} ({viewingRejection?.email})</span>
             </div>
             <div>
-              <span className="text-slate-500 dark:text-slate-400 block text-[10px] uppercase font-extrabold">Rejected By Admin</span>
-              <span className="font-bold text-slate-900 dark:text-white">{viewingRejection?.rejected_by_name || 'Admin'}</span>
+              <span className="text-[#666666] block text-[10px] uppercase font-black">Rejected By Admin</span>
+              <span className="font-bold text-[#111111]">{viewingRejection?.rejected_by_name || 'Admin'}</span>
             </div>
             {viewingRejection?.rejected_at && (
               <div>
-                <span className="text-slate-500 dark:text-slate-400 block text-[10px] uppercase font-extrabold">Rejection Date & Time</span>
-                <span className="font-bold text-slate-900 dark:text-white">{new Date(viewingRejection.rejected_at).toLocaleString()}</span>
+                <span className="text-[#666666] block text-[10px] uppercase font-black">Rejection Date & Time</span>
+                <span className="font-bold text-[#111111]">{new Date(viewingRejection.rejected_at).toLocaleString()}</span>
               </div>
             )}
           </div>
 
           <div>
-            <span className="text-slate-800 dark:text-slate-200 font-bold block mb-1.5">Stored Rejection Reason:</span>
-            <div className="p-3.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-xl text-rose-950 dark:text-rose-200 font-medium whitespace-pre-wrap">
+            <span className="text-[#111111] font-black block mb-1.5">Stored Rejection Reason:</span>
+            <div className="p-3.5 bg-[#FEF9C3] border border-[#EAB308]/40 rounded-xl text-[#000000] font-medium whitespace-pre-wrap">
               {viewingRejection?.rejection_reason || 'No rejection reason recorded.'}
             </div>
           </div>
@@ -590,7 +590,7 @@ export const AdminEmployees: React.FC = () => {
           <div className="flex justify-end pt-2">
             <button
               onClick={() => setViewingRejection(null)}
-              className="min-h-[44px] px-5 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl font-bold transition-colors"
+              className="min-h-[44px] px-5 py-2.5 bg-[#111111] hover:bg-[#000000]:bg-[#FFD600] text-white rounded-xl font-black transition-colors"
             >
               Close
             </button>

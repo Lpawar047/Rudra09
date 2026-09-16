@@ -65,31 +65,31 @@ export const AdminReports: React.FC = () => {
   const recoveryColumns: Column<any>[] = [
     {
       header: 'Case ID',
-      accessor: (row) => <span className="font-bold font-mono text-indigo-600 dark:text-indigo-400">#RC-{row.case_id}</span>,
+      accessor: (row) => <span className="font-black font-mono text-[#111111]">#RC-{row.case_id}</span>,
     },
     {
       header: 'Loan Account',
-      accessor: (row) => <span className="font-bold text-slate-900 dark:text-white font-mono text-xs">{row.loan_account_number}</span>,
+      accessor: (row) => <span className="font-bold text-[#111111] font-mono text-xs">{row.loan_account_number}</span>,
     },
     {
       header: 'Borrower',
-      accessor: (row) => <span className="font-bold text-slate-900 dark:text-white">{row.customer_name}</span>,
+      accessor: (row) => <span className="font-bold text-[#111111]">{row.customer_name}</span>,
     },
     {
       header: 'Location',
-      accessor: (row) => <span className="font-semibold text-slate-800 dark:text-slate-200">{row.location}</span>,
+      accessor: (row) => <span className="font-semibold text-[#111111]">{row.location}</span>,
     },
     {
       header: 'Outstanding POS',
-      accessor: (row) => <span className="font-extrabold text-rose-600 dark:text-rose-400 font-mono">{formatCurrency(row.outstanding_amount)}</span>,
+      accessor: (row) => <span className="font-black text-[#111111] font-mono">{formatCurrency(row.outstanding_amount)}</span>,
     },
     {
       header: 'Total Collected',
-      accessor: (row) => <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">{formatCurrency(row.total_collected)}</span>,
+      accessor: (row) => <span className="font-black text-[#111111] font-mono">{formatCurrency(row.total_collected)}</span>,
     },
     {
       header: 'Assigned Officer',
-      accessor: (row) => <span className="font-bold text-slate-800 dark:text-slate-200">{row.employee_name || 'Unassigned'}</span>,
+      accessor: (row) => <span className="font-bold text-[#111111]">{row.employee_name || 'Unassigned'}</span>,
     },
     {
       header: 'Status',
@@ -100,23 +100,23 @@ export const AdminReports: React.FC = () => {
   const employeeColumns: Column<any>[] = [
     {
       header: 'Officer Name',
-      accessor: (row) => <span className="font-bold text-slate-900 dark:text-white">{row.name}</span>,
+      accessor: (row) => <span className="font-bold text-[#111111]">{row.name}</span>,
     },
     {
       header: 'Email / Phone',
-      accessor: (row) => <span className="font-medium text-slate-700 dark:text-slate-300">{row.email} ({row.phone || 'N/A'})</span>,
+      accessor: (row) => <span className="font-medium text-[#666666]">{row.email} ({row.phone || 'N/A'})</span>,
     },
     {
       header: 'Assigned Cases',
-      accessor: (row) => <span className="font-bold text-slate-900 dark:text-white">{row.total_assigned_cases}</span>,
+      accessor: (row) => <span className="font-black text-[#111111]">{row.total_assigned_cases}</span>,
     },
     {
       header: 'Recovered / Closed',
-      accessor: (row) => <span className="font-bold text-emerald-600 dark:text-emerald-400">{row.recovered_cases} Cases</span>,
+      accessor: (row) => <span className="font-black text-[#111111]">{row.recovered_cases} Cases</span>,
     },
     {
       header: 'Total Collections (₹)',
-      accessor: (row) => <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">{formatCurrency(row.total_recovery_amount)}</span>,
+      accessor: (row) => <span className="font-black text-[#111111] font-mono">{formatCurrency(row.total_recovery_amount)}</span>,
       sortable: true,
     },
   ];
@@ -125,27 +125,27 @@ export const AdminReports: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Recovery & Team Performance Reports</h1>
-          <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1">Exportable business intelligence analytics and collection summaries.</p>
+          <h1 className="text-2xl font-black text-[#111111] tracking-tight">Recovery & Team Performance Reports</h1>
+          <p className="text-xs text-[#666666] font-medium mt-1">Exportable business intelligence analytics and collection summaries.</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={() => setReportType('recovery')}
-            className={`min-h-[44px] px-4 py-2.5 text-xs font-bold rounded-xl transition-colors ${
+            className={`min-h-[44px] px-4 py-2.5 text-xs font-black rounded-xl transition-colors ${
               reportType === 'recovery'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'
+                ? 'bg-[#111111] text-[#FFFFFF] shadow-xs'
+                : 'bg-white text-[#111111] border border-[#D6D6D6] hover:bg-[#F2F2F2]'
             }`}
           >
             Case Recovery Analytics
           </button>
           <button
             onClick={() => setReportType('employees')}
-            className={`min-h-[44px] px-4 py-2.5 text-xs font-bold rounded-xl transition-colors ${
+            className={`min-h-[44px] px-4 py-2.5 text-xs font-black rounded-xl transition-colors ${
               reportType === 'employees'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'
+                ? 'bg-[#111111] text-[#FFFFFF] shadow-xs'
+                : 'bg-white text-[#111111] border border-[#D6D6D6] hover:bg-[#F2F2F2]'
             }`}
           >
             Field Officers Leaderboard
@@ -153,7 +153,7 @@ export const AdminReports: React.FC = () => {
 
           <button
             onClick={handleExportExcel}
-            className="min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors ml-auto sm:ml-0"
+            className="min-h-[44px] inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#FACC15] hover:bg-[#FFD600] text-[#000000] font-black text-xs rounded-xl shadow-xs transition-colors ml-auto sm:ml-0 border border-[#EAB308]"
           >
             <FileSpreadsheet className="w-4 h-4" /> Export Excel Report
           </button>
@@ -161,11 +161,11 @@ export const AdminReports: React.FC = () => {
       </div>
 
       {reportType === 'recovery' && (
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs flex flex-col sm:flex-row gap-3">
+        <div className="bg-white p-4 rounded-xl border border-[#D6D6D6] shadow-2xs flex flex-col sm:flex-row gap-3">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="min-h-[44px] px-3.5 py-2.5 text-xs bg-white dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
+            className="min-h-[44px] px-3.5 py-2.5 text-xs bg-[#FAFAFA] border border-[#D6D6D6] rounded-xl font-bold text-[#111111] focus:ring-2 focus:ring-[#FACC15] focus:border-[#EAB308]"
           >
             <option value="">All Recovery Statuses</option>
             <option value="RECOVERED">RECOVERED</option>
@@ -178,7 +178,7 @@ export const AdminReports: React.FC = () => {
             placeholder="Filter by city / location..."
             value={locationFilter}
             onChange={(e) => setLocationFilter(e.target.value)}
-            className="min-h-[44px] px-3.5 py-2.5 text-xs bg-white dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600"
+            className="min-h-[44px] px-3.5 py-2.5 text-xs bg-[#FAFAFA] border border-[#D6D6D6] rounded-xl text-[#111111] placeholder:text-[#666666]:text-[#999999] focus:ring-2 focus:ring-[#FACC15] focus:border-[#EAB308]"
           />
         </div>
       )}

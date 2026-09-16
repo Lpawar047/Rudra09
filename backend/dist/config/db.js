@@ -92,15 +92,29 @@ async function migratePg() {
     if (!pgPool)
         return;
     const schema = `
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+    CREATE OR REPLACE FUNCTION set_updated_at_timestamp()
+    RETURNS TRIGGER AS $$
+    BEGIN
+      NEW.updated_at = CURRENT_TIMESTAMP;
+      RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
       email VARCHAR(255) UNIQUE NOT NULL,
       password_hash VARCHAR(255) NOT NULL,
-      role VARCHAR(50) NOT NULL CHECK (role IN ('ADMIN', 'MANAGER', 'EMPLOYEE')),
+      role VARCHAR(50) NOT NULL DEFAULT 'EMPLOYEE',
       phone VARCHAR(50),
       department VARCHAR(100),
-      status VARCHAR(50) DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'INACTIVE', 'ON_LEAVE')),
+      status VARCHAR(50) DEFAULT 'ACTIVE',
+      rejected_by INT REFERENCES users(id) ON DELETE SET NULL,
+      rejected_at TIMESTAMP,
+      rejection_reason TEXT,
+      metadata JSONB DEFAULT '{}'::jsonb,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -117,6 +131,7 @@ async function migratePg() {
       state VARCHAR(100) NOT NULL,
       pincode VARCHAR(20),
       employment_info TEXT,
+      metadata JSONB DEFAULT '{}'::jsonb,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -131,7 +146,8 @@ async function migratePg() {
       chassis_number VARCHAR(100),
       engine_number VARCHAR(100),
       location TEXT,
-      status VARCHAR(50) DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'UNDER_RECOVERY', 'RECOVERED', 'SOLD', 'CLOSED')),
+      status VARCHAR(50) DEFAULT 'ACTIVE',
+      metadata JSONB DEFAULT '{}'::jsonb,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -148,8 +164,9 @@ async function migratePg() {
       total_overdue NUMERIC(15, 2) NOT NULL DEFAULT 0,
       dpd INT DEFAULT 0,
       start_date DATE,
-      status VARCHAR(50) DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'OVERDUE', 'RECOVERY', 'RECOVERED', 'CLOSED')),
+      status VARCHAR(50) DEFAULT 'ACTIVE',
       imported_excel_data JSONB,
+      metadata JSONB DEFAULT '{}'::jsonb,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -159,13 +176,14 @@ async function migratePg() {
       loan_id INT NOT NULL REFERENCES loans(id) ON DELETE CASCADE,
       assigned_employee_id INT REFERENCES users(id) ON DELETE SET NULL,
       assigned_manager_id INT REFERENCES users(id) ON DELETE SET NULL,
-      priority VARCHAR(50) DEFAULT 'MEDIUM' CHECK (priority IN ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL')),
-      status VARCHAR(50) DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'ASSIGNED', 'IN_PROGRESS', 'CONTACTED', 'PROMISE_TO_PAY', 'RECOVERED', 'CLOSED', 'UNABLE_TO_CONTACT', 'LEGAL_ACTION')),
+      priority VARCHAR(50) DEFAULT 'MEDIUM',
+      status VARCHAR(50) DEFAULT 'PENDING',
       due_date DATE,
       last_followup_date TIMESTAMP,
       next_followup_date TIMESTAMP,
       location TEXT,
       remarks TEXT,
+      metadata JSONB DEFAULT '{}'::jsonb,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -184,8 +202,8 @@ async function migratePg() {
       id SERIAL PRIMARY KEY,
       case_id INT NOT NULL REFERENCES recovery_cases(id) ON DELETE CASCADE,
       followup_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      followup_type VARCHAR(50) NOT NULL CHECK (followup_type IN ('PHONE_CALL', 'VISIT', 'SMS', 'EMAIL', 'OTHER')),
-      contact_result VARCHAR(50) NOT NULL CHECK (contact_result IN ('CONTACTED', 'NOT_CONTACTED', 'PROMISE_TO_PAY', 'REFUSED', 'WRONG_NUMBER', 'CUSTOMER_UNAVAILABLE')),
+      followup_type VARCHAR(50) NOT NULL DEFAULT 'PHONE_CALL',
+      contact_result VARCHAR(50) NOT NULL DEFAULT 'CONTACTED',
       customer_response TEXT,
       remarks TEXT,
       next_followup_date TIMESTAMP,
@@ -199,7 +217,7 @@ async function migratePg() {
       customer_id INT NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
       amount NUMERIC(15, 2) NOT NULL,
       payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      payment_mode VARCHAR(50) NOT NULL CHECK (payment_mode IN ('CASH', 'UPI', 'BANK_TRANSFER', 'CHEQUE', 'OTHER')),
+      payment_mode VARCHAR(50) NOT NULL DEFAULT 'CASH',
       transaction_ref VARCHAR(100),
       collected_by INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       remarks TEXT,
@@ -240,16 +258,84 @@ async function migratePg() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
-    CREATE INDEX IF NOT EXISTS idx_loans_acc ON loans(loan_account_number);
+    -- Remove restrictive check constraints for maximum dynamic capability
+    ALTER TABLE recovery_cases DROP CONSTRAINT IF EXISTS recovery_cases_status_check;
+    ALTER TABLE recovery_cases DROP CONSTRAINT IF EXISTS recovery_cases_priority_check;
+    ALTER TABLE users DROP CONSTRAINT IF EXISTS users_status_check;
+    ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+    ALTER TABLE loans DROP CONSTRAINT IF EXISTS loans_status_check;
+    ALTER TABLE vehicles DROP CONSTRAINT IF EXISTS vehicles_status_check;
+    ALTER TABLE followups DROP CONSTRAINT IF EXISTS followups_followup_type_check;
+    ALTER TABLE followups DROP CONSTRAINT IF EXISTS followups_contact_result_check;
+    ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_payment_mode_check;
+
+    -- Dynamic Indexes
+    CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+    CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+    CREATE INDEX IF NOT EXISTS idx_users_status ON users(status);
+
+    CREATE INDEX IF NOT EXISTS idx_cust_phone ON customers(phone);
+    CREATE INDEX IF NOT EXISTS idx_cust_name ON customers(full_name);
+    CREATE INDEX IF NOT EXISTS idx_cust_city ON customers(city);
+    CREATE INDEX IF NOT EXISTS idx_cust_meta ON customers USING GIN(metadata);
+
     CREATE INDEX IF NOT EXISTS idx_vehicles_reg ON vehicles(registration_number);
     CREATE INDEX IF NOT EXISTS idx_vehicles_eng ON vehicles(engine_number);
     CREATE INDEX IF NOT EXISTS idx_vehicles_chas ON vehicles(chassis_number);
-    CREATE INDEX IF NOT EXISTS idx_cust_phone ON customers(phone);
-    CREATE INDEX IF NOT EXISTS idx_cust_name ON customers(full_name);
+    CREATE INDEX IF NOT EXISTS idx_vehicles_status ON vehicles(status);
+
+    CREATE INDEX IF NOT EXISTS idx_loans_acc ON loans(loan_account_number);
+    CREATE INDEX IF NOT EXISTS idx_loans_cust ON loans(customer_id);
+    CREATE INDEX IF NOT EXISTS idx_loans_veh ON loans(vehicle_id);
+    CREATE INDEX IF NOT EXISTS idx_loans_status ON loans(status);
+    CREATE INDEX IF NOT EXISTS idx_loans_excel_gin ON loans USING GIN(imported_excel_data);
+    CREATE INDEX IF NOT EXISTS idx_loans_meta ON loans USING GIN(metadata);
+
+    CREATE INDEX IF NOT EXISTS idx_cases_loan ON recovery_cases(loan_id);
+    CREATE INDEX IF NOT EXISTS idx_cases_emp ON recovery_cases(assigned_employee_id);
+    CREATE INDEX IF NOT EXISTS idx_cases_mgr ON recovery_cases(assigned_manager_id);
+    CREATE INDEX IF NOT EXISTS idx_cases_status ON recovery_cases(status);
+    CREATE INDEX IF NOT EXISTS idx_cases_priority ON recovery_cases(priority);
+    CREATE INDEX IF NOT EXISTS idx_cases_meta ON recovery_cases USING GIN(metadata);
+
+    CREATE INDEX IF NOT EXISTS idx_assign_case ON case_assignments(case_id);
+    CREATE INDEX IF NOT EXISTS idx_assign_emp ON case_assignments(employee_id);
+
+    CREATE INDEX IF NOT EXISTS idx_followup_case ON followups(case_id);
+    CREATE INDEX IF NOT EXISTS idx_followup_date ON followups(followup_date);
+
+    CREATE INDEX IF NOT EXISTS idx_payment_case ON payments(case_id);
+    CREATE INDEX IF NOT EXISTS idx_payment_cust ON payments(customer_id);
+
+    CREATE INDEX IF NOT EXISTS idx_excel_up_status ON excel_uploads(status);
+    CREATE INDEX IF NOT EXISTS idx_excel_err_upload ON excel_import_errors(upload_id);
+    CREATE INDEX IF NOT EXISTS idx_activity_user ON activity_logs(user_id);
+    CREATE INDEX IF NOT EXISTS idx_activity_action ON activity_logs(action);
+
+    -- Automatic timestamp updates
+    DROP TRIGGER IF EXISTS trg_users_updated_at ON users;
+    CREATE TRIGGER trg_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION set_updated_at_timestamp();
+
+    DROP TRIGGER IF EXISTS trg_customers_updated_at ON customers;
+    CREATE TRIGGER trg_customers_updated_at BEFORE UPDATE ON customers FOR EACH ROW EXECUTE FUNCTION set_updated_at_timestamp();
+
+    DROP TRIGGER IF EXISTS trg_vehicles_updated_at ON vehicles;
+    CREATE TRIGGER trg_vehicles_updated_at BEFORE UPDATE ON vehicles FOR EACH ROW EXECUTE FUNCTION set_updated_at_timestamp();
+
+    DROP TRIGGER IF EXISTS trg_loans_updated_at ON loans;
+    CREATE TRIGGER trg_loans_updated_at BEFORE UPDATE ON loans FOR EACH ROW EXECUTE FUNCTION set_updated_at_timestamp();
+
+    DROP TRIGGER IF EXISTS trg_recovery_cases_updated_at ON recovery_cases;
+    CREATE TRIGGER trg_recovery_cases_updated_at BEFORE UPDATE ON recovery_cases FOR EACH ROW EXECUTE FUNCTION set_updated_at_timestamp();
   `;
     await pgPool.query(schema);
     try {
         await pgPool.query('ALTER TABLE loans ADD COLUMN IF NOT EXISTS imported_excel_data JSONB');
+        await pgPool.query('ALTER TABLE loans ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT \'{}\'::jsonb');
+        await pgPool.query('ALTER TABLE customers ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT \'{}\'::jsonb');
+        await pgPool.query('ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT \'{}\'::jsonb');
+        await pgPool.query('ALTER TABLE recovery_cases ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT \'{}\'::jsonb');
+        await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT \'{}\'::jsonb');
         await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS rejected_by INT');
         await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS rejected_at TIMESTAMP');
         await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS rejection_reason TEXT');

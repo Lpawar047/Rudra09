@@ -28,19 +28,19 @@ export const EmployeeFollowups: React.FC = () => {
   const columns: Column<Followup>[] = [
     {
       header: 'Followup ID',
-      accessor: (row) => <span className="font-bold text-slate-900 dark:text-white font-mono">#FLD-{row.id}</span>,
+      accessor: (row) => <span className="font-black text-[#111111] font-mono">#FLD-{row.id}</span>,
     },
     {
       header: 'Loan Account',
-      accessor: (row) => <span className="font-mono font-bold text-xs text-slate-900 dark:text-white">{row.loan_account_number}</span>,
+      accessor: (row) => <span className="font-mono font-bold text-xs text-[#111111]">{row.loan_account_number}</span>,
     },
     {
       header: 'Borrower Name',
-      accessor: (row) => <span className="font-semibold text-slate-800 dark:text-slate-200">{row.customer_name}</span>,
+      accessor: (row) => <span className="font-bold text-[#111111]">{row.customer_name}</span>,
     },
     {
       header: 'Interaction Type',
-      accessor: (row) => <span className="font-bold text-slate-800 dark:text-slate-200">{row.followup_type}</span>,
+      accessor: (row) => <span className="font-bold text-[#111111]">{row.followup_type}</span>,
     },
     {
       header: 'Outcome Result',
@@ -48,19 +48,19 @@ export const EmployeeFollowups: React.FC = () => {
     },
     {
       header: 'Response / Remarks',
-      accessor: (row) => <span className="text-xs text-slate-600 dark:text-slate-400 italic">{row.remarks || row.customer_response || 'Logged'}</span>,
+      accessor: (row) => <span className="text-xs text-[#666666] italic">{row.remarks || row.customer_response || 'Logged'}</span>,
     },
     {
       header: 'Logged Date',
-      accessor: (row) => <span className="text-slate-700 dark:text-slate-300">{new Date(row.followup_date).toLocaleString()}</span>,
+      accessor: (row) => <span className="text-[#111111]">{new Date(row.followup_date).toLocaleString()}</span>,
     },
   ];
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">My Logged Follow-ups</h1>
-        <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1">Audit log of your phone calls, field visits, and customer promises.</p>
+        <h1 className="text-2xl font-black text-[#111111] tracking-tight">My Logged Follow-ups</h1>
+        <p className="text-xs text-[#666666] font-medium mt-1">Audit log of your phone calls, field visits, and customer promises.</p>
       </div>
 
       <DataTable

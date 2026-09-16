@@ -68,25 +68,25 @@ export async function login(req: Request, res: Response) {
       return res.status(400).json({ message: 'Email and password are required.' });
     }
 
-    const userResult = await query('SELECT * FROM users WHERE email = $1', [email.trim().toLowerCase()]);
+    const userResult = await query('SELECT * FROM users WHERE LOWER(email) = LOWER($1)', [email.trim()]);
     if (userResult.rows.length === 0) {
       await query(
         'INSERT INTO activity_logs (user_id, action, details) VALUES ($1, $2, $3)',
         [null, 'LOGIN_FAILED', `Failed login attempt for unknown email: ${email}`]
       );
-      return res.status(401).json({ message: 'Invalid credentials.' });
+      return res.status(401).json({ message: 'Invalid credentials. Account not found.' });
     }
 
     const user = userResult.rows[0];
 
-    // Password verification FIRST
-    const isValid = await comparePassword(password, user.password_hash);
+    // Password verification (checks exact and trimmed password for copy-paste safety)
+    const isValid = (await comparePassword(password, user.password_hash)) || (await comparePassword(password.trim(), user.password_hash));
     if (!isValid) {
       await query(
         'INSERT INTO activity_logs (user_id, action, details) VALUES ($1, $2, $3)',
         [user.id, 'LOGIN_FAILED', `Failed login attempt (invalid password) for user: ${email}`]
       );
-      return res.status(401).json({ message: 'Invalid credentials.' });
+      return res.status(401).json({ message: 'Invalid credentials. Incorrect password.' });
     }
 
     // Account status verification SECOND

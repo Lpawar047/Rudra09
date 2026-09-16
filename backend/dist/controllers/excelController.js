@@ -51,15 +51,18 @@ const COLUMN_MAPPINGS = {
         'proposal no', 'proposal_no', 'proposal', 'proposal no.', 'loan account number',
         'loan account no', 'account number', 'loan no', 'loan account', 'account no',
         'loan_acc_no', 'loan_account', 'loan_no', 'loan_number', 'lan', 'agreement_no',
-        'agreement no', 'contract_no', 'loan_id'
+        'agreement no', 'contract_no', 'loan_id', 'due_agmtno', 'due agmtno', 'dueagmtno',
+        'agmtno', 'agmt_no', 'agmt no', 'agmt'
     ],
     customer_name: [
         'customer name', 'borrower name', 'customer', 'borrower', 'name', 'client name',
-        'party name', 'party', 'customer_name', 'borrower_name', 'cust_name', 'hirer_name'
+        'party name', 'party', 'customer_name', 'borrower_name', 'cust_name', 'hirer_name',
+        'customername'
     ],
     phone: [
         'mo no', 'mo_no', 'mono', 'mobile no', 'mobile number', 'phone', 'contact number',
-        'mobile', 'phone number', 'contact', 'contact no', 'phone_no', 'mobile_no', 'contact_no', 'mo no.'
+        'mobile', 'phone number', 'contact', 'contact no', 'phone_no', 'mobile_no', 'contact_no', 'mo no.',
+        'mobileno'
     ],
     address: [
         'residence address', 'residence_address', 'res_address', 'customer address',
@@ -73,17 +76,20 @@ const COLUMN_MAPPINGS = {
     ],
     vehicle_number: [
         'registration number', 'registration no', 'reg no', 'reg_no', 'vehicle number',
-        'vehicle reg no', 'vehicle no', 'veh_no', 'veh_reg_no', 'rc_no', 'reg number'
+        'vehicle reg no', 'vehicle no', 'veh_no', 'veh_reg_no', 'rc_no', 'reg number',
+        'reg_number', 'regnumber'
     ],
     vehicle_model: [
         'asset desc', 'asset_desc', 'asset description', 'vehicle model', 'model',
         'vehicle name', 'car model', 'make model', 'vehicle_make', 'asset'
     ],
     engine_number: [
-        'engine no', 'engine_no', 'engine number', 'engine_num', 'eng_no', 'engine no.'
+        'engine no', 'engine_no', 'engine number', 'engine_num', 'eng_no', 'engine no.',
+        'eng_number', 'engno'
     ],
     chassis_number: [
-        'chassis no', 'chassis_no', 'chassis number', 'chassis_num', 'chas_no', 'chassis no.'
+        'chassis no', 'chassis_no', 'chassis number', 'chassis_num', 'chas_no', 'chassis no.',
+        'chassis_number', 'chassisno'
     ],
     outstanding_amount: [
         'pos', 'outstanding amount', 'total outstanding', 'balance', 'outstanding',
@@ -96,13 +102,15 @@ const COLUMN_MAPPINGS = {
         'total due', 'total_due', 'overdue_amount', 'overdue', 'total_overdue', 'total_due_amount', 'total due amount'
     ],
     dpd: [
-        'bom bucket', 'bom_bucket', 'bucket', 'days past due', 'dpd', 'overdue days', 'days overdue', 'ageing'
+        'bom bucket', 'bom_bucket', 'bucket', 'days past due', 'dpd', 'overdue days', 'days overdue', 'ageing',
+        'bucket_slab', 'bucket slab', 'bucketslab', 'bkt'
     ],
     recovery_status: [
         'paid/unpaid', 'paid_unpaid', 'paid', 'unpaid', 'recovery status', 'status', 'case status', 'disposition'
     ],
     assigned_employee: [
-        'assigned employee', 'employee email', 'assigned officer', 'agent', 'field_officer', 'assigned_to'
+        'assigned employee', 'employee email', 'assigned officer', 'agent', 'field_officer', 'assigned_to',
+        'tcm_name', 'tcm name', 'tcm'
     ],
 };
 function normalizeHeader(str) {
@@ -163,8 +171,15 @@ function parseNumeric(val) {
 }
 async function uploadExcel(req, res) {
     try {
-        // STAGE 1: FILE UPLOAD VERIFICATION
-        console.log('[STAGE 1 FILE UPLOAD SUCCESS] Received req.file:', req.file);
+        // STAGE 1: FILE UPLOAD VERIFICATION & DEBUG LOGGING
+        console.log("Content-Type:", req.headers["content-type"]);
+        console.log("req.file:", req.file ? {
+            fieldname: req.file.fieldname,
+            originalname: req.file.originalname,
+            mimetype: req.file.mimetype,
+            size: req.file.size
+        } : null);
+        console.log("req.files:", req.files);
         if (!req.file) {
             return res.status(400).json({
                 message: 'STAGE 1 FILE UPLOAD ERROR: No file received under field name "file". Check field name and multipart boundary.'
@@ -218,18 +233,18 @@ async function uploadExcel(req, res) {
                     mappedRow[targetKey] = row[h];
                 }
             });
-            const rawProposal = mappedRow.loan_account_number || row['Proposal No'] || row['Proposal No.'] || row['Proposal'] || row['Loan Account Number'];
-            const rawCustomerName = mappedRow.customer_name || row['Customer Name'] || row['Borrower Name'] || row['Name'];
-            const rawPhone = mappedRow.phone || row['MO NO'] || row['Mobile No'] || row['Phone'];
-            const rawRegNo = mappedRow.vehicle_number || row['Registration Number'] || row['Reg No'];
+            const rawProposal = mappedRow.loan_account_number || row['Proposal No'] || row['Proposal No.'] || row['Proposal'] || row['Loan Account Number'] || row['DUE_AGMTNO'] || row['due_agmtno'] || row['AGMTNO'];
+            const rawCustomerName = mappedRow.customer_name || row['Customer Name'] || row['Borrower Name'] || row['Name'] || row['CUSTOMERNAME'];
+            const rawPhone = mappedRow.phone || row['MO NO'] || row['Mobile No'] || row['Phone'] || row['Mobile no'] || row['MOBILE NO'];
+            const rawRegNo = mappedRow.vehicle_number || row['Registration Number'] || row['Reg No'] || row['REG_NUMBER'] || row['Reg Number'];
             const rawPos = mappedRow.outstanding_amount || row['POS'] || row['Outstanding Amount'];
-            const rawEmi = mappedRow.emi_amount || row['EMI Amount'];
-            const rawTotalDue = mappedRow.total_overdue || row['Total Due'];
+            const rawEmi = mappedRow.emi_amount || row['EMI Amount'] || row['EMI'];
+            const rawTotalDue = mappedRow.total_overdue || row['Total Due'] || row['OVERDUE'] || row['Overdue'];
             const rawAddress = mappedRow.address || row['Residence Address'] || row['Address'];
-            const rawEngine = mappedRow.engine_number || row['Engine No'] || row['Engine Number'];
-            const rawChassis = mappedRow.chassis_number || row['Chassis No'] || row['Chassis Number'];
-            const rawAssetDesc = mappedRow.vehicle_model || row['Asset Desc'] || row['Asset Description'];
-            const rawBomBucket = mappedRow.dpd || row['BOM Bucket'];
+            const rawEngine = mappedRow.engine_number || row['Engine No'] || row['Engine Number'] || row['ENG_NO'];
+            const rawChassis = mappedRow.chassis_number || row['Chassis No'] || row['Chassis Number'] || row['CHASSIS_NO'];
+            const rawAssetDesc = mappedRow.vehicle_model || row['Asset Desc'] || row['Asset Description'] || row['MODEL'];
+            const rawBomBucket = mappedRow.dpd || row['BOM Bucket'] || row['Bucket_Slab'];
             const rawPaidStatus = mappedRow.recovery_status || row['PAID/UNPAID'];
             const proposalNo = String(rawProposal || '').trim().toUpperCase();
             const customerName = String(rawCustomerName || '').trim();
@@ -307,8 +322,9 @@ async function uploadExcel(req, res) {
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING id`, [path_1.default.basename(filePath), originalName, userId, rawRows.length, validCount, failedCount, duplicateCount, 'VALIDATED']);
         const uploadId = uploadRecordRes.rows.length > 0 ? uploadRecordRes.rows[0].id : uploadRecordRes.lastID;
-        // Save Error Logs
-        for (const err of validationErrors) {
+        // Save Error Logs (capped at top 50 to avoid slow sequential roundtrips over remote Neon SSL)
+        const errorsToSave = validationErrors.slice(0, 50);
+        for (const err of errorsToSave) {
             await (0, db_1.query)(`INSERT INTO excel_import_errors (upload_id, row_number, loan_account_number, error_message, raw_data)
          VALUES ($1, $2, $3, $4, $5)`, [uploadId, err.row_number, err.loan_account_number || 'N/A', `[${err.error_type}] ${err.field}: ${err.error_message}`, String(err.original_value || '')]);
         }
@@ -377,24 +393,48 @@ async function importExcel(req, res) {
                 }
                 else {
                     // --- INSERT NEW RECORD ---
-                    // Insert customer for this specific row
-                    const custCode = `CUST-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`;
-                    const newCust = await (0, db_1.query)(`INSERT INTO customers (customer_id, full_name, phone, address, city, state)
-             VALUES ($1, $2, $3, $4, $5, $6)
-             RETURNING id`, [custCode, r.customer_name, r.phone || 'N/A', r.address, r.city, r.state]);
-                    customerId = newCust.rows.length > 0 ? newCust.rows[0].id : newCust.lastID;
-                    // Insert vehicle for this specific row
-                    const newVeh = await (0, db_1.query)(`INSERT INTO vehicles (registration_number, model, engine_number, chassis_number, location, status)
-             VALUES ($1, $2, $3, $4, $5, $6)
-             RETURNING id`, [
-                        r.vehicle_number,
-                        r.vehicle_model || 'Commercial Vehicle',
-                        r.engine_number || null,
-                        r.chassis_number || null,
-                        r.city,
-                        'UNDER_RECOVERY'
-                    ]);
-                    vehicleId = newVeh.rows.length > 0 ? newVeh.rows[0].id : newVeh.lastID;
+                    // Check if customer already exists by phone
+                    let customerId;
+                    const phoneVal = r.phone || 'N/A';
+                    const existingCust = phoneVal !== 'N/A'
+                        ? await (0, db_1.query)('SELECT id FROM customers WHERE phone = $1 LIMIT 1', [phoneVal])
+                        : { rows: [] };
+                    if (existingCust.rows.length > 0) {
+                        customerId = existingCust.rows[0].id;
+                        await (0, db_1.query)(`UPDATE customers 
+               SET full_name = $1, address = $2, city = $3, state = $4, updated_at = CURRENT_TIMESTAMP 
+               WHERE id = $5`, [r.customer_name, r.address, r.city, r.state, customerId]);
+                    }
+                    else {
+                        const custCode = `CUST-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`;
+                        const newCust = await (0, db_1.query)(`INSERT INTO customers (customer_id, full_name, phone, address, city, state)
+               VALUES ($1, $2, $3, $4, $5, $6)
+               RETURNING id`, [custCode, r.customer_name, phoneVal, r.address, r.city, r.state]);
+                        customerId = newCust.rows.length > 0 ? newCust.rows[0].id : newCust.lastID;
+                    }
+                    // Check if vehicle already exists in vehicles table
+                    let vehicleId;
+                    const regNo = r.vehicle_number || `REG-${proposalNo}`;
+                    const existingVeh = await (0, db_1.query)('SELECT id FROM vehicles WHERE registration_number = $1', [regNo]);
+                    if (existingVeh.rows.length > 0) {
+                        vehicleId = existingVeh.rows[0].id;
+                        await (0, db_1.query)(`UPDATE vehicles 
+               SET model = $1, engine_number = $2, chassis_number = $3, location = $4, status = 'UNDER_RECOVERY', updated_at = CURRENT_TIMESTAMP 
+               WHERE id = $5`, [r.vehicle_model || 'Commercial Vehicle', r.engine_number || null, r.chassis_number || null, r.city, vehicleId]);
+                    }
+                    else {
+                        const newVeh = await (0, db_1.query)(`INSERT INTO vehicles (registration_number, model, engine_number, chassis_number, location, status)
+               VALUES ($1, $2, $3, $4, $5, $6)
+               RETURNING id`, [
+                            regNo,
+                            r.vehicle_model || 'Commercial Vehicle',
+                            r.engine_number || null,
+                            r.chassis_number || null,
+                            r.city,
+                            'UNDER_RECOVERY'
+                        ]);
+                        vehicleId = newVeh.rows.length > 0 ? newVeh.rows[0].id : newVeh.lastID;
+                    }
                     // Insert loan record
                     const newLoan = await (0, db_1.query)(`INSERT INTO loans (loan_account_number, customer_id, vehicle_id, loan_amount, outstanding_amount, emi_amount, total_overdue, dpd, imported_excel_data, status)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -430,7 +470,7 @@ async function importExcel(req, res) {
         }
         if (upload_id) {
             await (0, db_1.query)(`UPDATE excel_uploads 
-         SET status = 'IMPORTED', successful_rows = $1, duplicate_rows = $2 
+         SET status = 'COMPLETED', successful_rows = $1, duplicate_rows = $2 
          WHERE id = $3`, [importedCount, updatedCount, upload_id]);
         }
         await (0, db_1.query)('INSERT INTO activity_logs (user_id, action, details) VALUES ($1, $2, $3)', [userId, 'IMPORT_EXCEL', `Imported ${importedCount} new cases & updated ${updatedCount} existing cases.`]);

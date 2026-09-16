@@ -21,13 +21,13 @@ export const RudraLogo: React.FC<RudraLogoProps> = ({
       >
         <defs>
           <linearGradient id="goldGradSymbol" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#D4A62A" />
-            <stop offset="50%" stopColor="#C89220" />
-            <stop offset="100%" stopColor="#AA7511" />
+            <stop offset="0%" stopColor="#FACC15" />
+            <stop offset="50%" stopColor="#FFD600" />
+            <stop offset="100%" stopColor="#EAB308" />
           </linearGradient>
           <linearGradient id="navyGradSymbol" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#0F284B" />
-            <stop offset="100%" stopColor="#071B35" />
+            <stop offset="0%" stopColor="#1F1F1F" />
+            <stop offset="100%" stopColor="#000000" />
           </linearGradient>
         </defs>
 
@@ -88,20 +88,20 @@ export const RudraLogo: React.FC<RudraLogoProps> = ({
       >
         <defs>
           <linearGradient id="goldGradMain" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#D4A62A" />
-            <stop offset="50%" stopColor="#C89220" />
-            <stop offset="100%" stopColor="#AA7511" />
+            <stop offset="0%" stopColor="#FACC15" />
+            <stop offset="50%" stopColor="#FFD600" />
+            <stop offset="100%" stopColor="#EAB308" />
           </linearGradient>
 
           <linearGradient id="navyGradMain" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#0F284B" />
-            <stop offset="100%" stopColor="#071B35" />
+            <stop offset="0%" stopColor="#1F1F1F" />
+            <stop offset="100%" stopColor="#000000" />
           </linearGradient>
         </defs>
 
         {/* 1. SHIELD EMBLEM */}
         <g transform="translate(0, 10)">
-          {/* Outer Deep Navy Shield */}
+          {/* Outer Deep Charcoal Shield */}
           <path
             d="M 250,30 L 340,60 C 340,150 315,210 250,240 C 185,210 160,150 160,60 Z"
             fill="none"
@@ -109,7 +109,7 @@ export const RudraLogo: React.FC<RudraLogoProps> = ({
             strokeWidth="12"
             strokeLinejoin="round"
           />
-          {/* Inner Metallic Gold Shield */}
+          {/* Inner Yellow Shield */}
           <path
             d="M 250,45 L 328,71 C 328,145 305,197 250,223 C 195,197 172,145 172,71 Z"
             fill="none"
@@ -159,7 +159,7 @@ export const RudraLogo: React.FC<RudraLogoProps> = ({
           fontSize="64"
           fontWeight="900"
           letterSpacing="6"
-          fill="#071B35"
+          fill="#111111"
         >
           RUDRA
         </text>

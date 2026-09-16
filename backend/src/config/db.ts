@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 
+import { hashPassword } from '../utils/password';
+
 dotenv.config();
 
 let pgPool: Pool | null = null;
@@ -15,41 +17,125 @@ export async function initDb() {
   const dbUrl = process.env.DATABASE_URL;
 
   if (dbUrl && dbUrl.trim() !== '') {
-    console.log('🔗 Connecting to PostgreSQL / Neon Database...');
-    pgPool = new Pool({
-      connectionString: dbUrl,
-      ssl: dbUrl.includes('neon.tech') || dbUrl.includes('sslmode=require') 
-        ? { rejectUnauthorized: false } 
-        : false,
-    });
-    isPg = true;
-    await migratePg();
-    console.log('✅ PostgreSQL Database connected & schema migrated successfully.');
-  } else {
-    console.log('⚡ No DATABASE_URL specified. Initializing local SQLite database...');
-    const dataDir = path.join(__dirname, '../../data');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-    const dbPath = path.join(dataDir, 'rudra_services.sqlite');
+    try {
+      console.log('🔗 Connecting to PostgreSQL / Neon Database...');
+      pgPool = new Pool({
+        connectionString: dbUrl,
+        ssl: dbUrl.includes('neon.tech') || dbUrl.includes('sslmode=require') 
+          ? { rejectUnauthorized: false } 
+          : false,
+        max: 10,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 10000,
+      });
 
-    sqliteDb = await open({
-      filename: dbPath,
-      driver: sqlite3.Database,
-    });
-    isPg = false;
-    await migrateSqlite();
-    console.log(`✅ SQLite Database connected at ${dbPath} & schema migrated successfully.`);
+      // Critical: Prevent Node process crash when idle client disconnects
+      pgPool.on('error', (err) => {
+        console.warn('⚠️ Idle PostgreSQL client notice (will reconnect):', err.message);
+      });
+
+      isPg = true;
+      await migratePg();
+      console.log('✅ PostgreSQL Database connected & schema migrated successfully.');
+      await ensureDefaultUsers();
+      return;
+    } catch (pgError: any) {
+      console.error('⚠️ PostgreSQL connection failed, falling back to local SQLite database:', pgError.message);
+      pgPool = null;
+      isPg = false;
+    }
+  }
+
+  console.log('⚡ Initializing local SQLite database...');
+  const dataDir = path.join(__dirname, '../../data');
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+  const dbPath = path.join(dataDir, 'rudra_services.sqlite');
+
+  sqliteDb = await open({
+    filename: dbPath,
+    driver: sqlite3.Database,
+  });
+  isPg = false;
+  await migrateSqlite();
+  console.log(`✅ SQLite Database connected at ${dbPath} & schema migrated successfully.`);
+  await ensureDefaultUsers();
+}
+
+async function ensureDefaultUsers() {
+  try {
+    const adminHash = await hashPassword('admin123');
+    const mgrHash = await hashPassword('manager123');
+    const empHash = await hashPassword('employee123');
+
+    const defaultUsers = [
+      {
+        name: 'Rudra Admin',
+        email: 'admin@rudraservices.com',
+        role: 'ADMIN',
+        hash: adminHash,
+        phone: '+91 98200 11223',
+        department: 'Executive Ops',
+      },
+      {
+        name: 'Rajesh Sharma',
+        email: 'manager@rudraservices.com',
+        role: 'MANAGER',
+        hash: mgrHash,
+        phone: '+91 98200 44556',
+        department: 'Western Zone Recovery',
+      },
+      {
+        name: 'Vikram Singh',
+        email: 'employee@rudraservices.com',
+        role: 'EMPLOYEE',
+        hash: empHash,
+        phone: '+91 98765 43210',
+        department: 'Field Recovery Team A',
+      },
+    ];
+
+    for (const u of defaultUsers) {
+      const existing = await query('SELECT id, status, password_hash FROM users WHERE LOWER(email) = LOWER($1)', [u.email]);
+      if (existing.rows.length === 0) {
+        await query(
+          `INSERT INTO users (name, email, password_hash, role, phone, department, status)
+           VALUES ($1, $2, $3, $4, $5, $6, 'ACTIVE')`,
+          [u.name, u.email, u.hash, u.role, u.phone, u.department]
+        );
+        console.log(`✅ Default user ensured: ${u.email} (${u.role})`);
+      } else {
+        await query(
+          `UPDATE users SET password_hash = $1, status = 'ACTIVE' WHERE LOWER(email) = LOWER($2)`,
+          [u.hash, u.email]
+        );
+      }
+    }
+  } catch (err: any) {
+    console.warn('⚠️ Notice during ensureDefaultUsers:', err.message);
   }
 }
 
 export async function query(sql: string, params: any[] = []): Promise<{ rows: any[]; rowCount: number; lastID?: number }> {
   if (isPg && pgPool) {
-    const res = await pgPool.query(sql, params);
-    return {
-      rows: res.rows,
-      rowCount: res.rowCount || res.rows.length,
-    };
+    try {
+      const res = await pgPool.query(sql, params);
+      return {
+        rows: res.rows,
+        rowCount: res.rowCount || res.rows.length,
+      };
+    } catch (err: any) {
+      if (err.code === 'ECONNRESET' || err.message?.includes('Connection terminated') || err.message?.includes('closed')) {
+        console.warn('⚠️ Retrying query after connection reset...');
+        const retryRes = await pgPool.query(sql, params);
+        return {
+          rows: retryRes.rows,
+          rowCount: retryRes.rowCount || retryRes.rows.length,
+        };
+      }
+      throw err;
+    }
   } else if (sqliteDb) {
     // Correctly convert PostgreSQL $1, $2 placeholder occurrences to SQLite ? with mapped sqliteParams array
     const sqliteParams: any[] = [];
@@ -310,6 +396,7 @@ async function migratePg() {
     CREATE INDEX IF NOT EXISTS idx_excel_err_upload ON excel_import_errors(upload_id);
     CREATE INDEX IF NOT EXISTS idx_activity_user ON activity_logs(user_id);
     CREATE INDEX IF NOT EXISTS idx_activity_action ON activity_logs(action);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_cases_loan_unique ON recovery_cases(loan_id);
 
     -- Automatic timestamp updates
     DROP TRIGGER IF EXISTS trg_users_updated_at ON users;
@@ -339,6 +426,20 @@ async function migratePg() {
     await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS rejected_by INT');
     await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS rejected_at TIMESTAMP');
     await pgPool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS rejection_reason TEXT');
+
+    // Auto-heal: Ensure every loan has an active recovery case
+    await pgPool.query(`
+      INSERT INTO recovery_cases (loan_id, priority, status, location)
+      SELECT l.id,
+             CASE WHEN COALESCE(l.dpd, 0) > 90 THEN 'CRITICAL' WHEN COALESCE(l.dpd, 0) > 60 THEN 'HIGH' ELSE 'MEDIUM' END,
+             COALESCE(l.status, 'PENDING'),
+             COALESCE(c.city, 'Nashik')
+      FROM loans l
+      LEFT JOIN customers c ON l.customer_id = c.id
+      LEFT JOIN recovery_cases r ON l.id = r.loan_id
+      WHERE r.id IS NULL
+      ON CONFLICT (loan_id) DO NOTHING;
+    `);
   } catch (e) {}
 }
 

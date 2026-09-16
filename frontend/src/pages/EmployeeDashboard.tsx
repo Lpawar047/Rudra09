@@ -42,24 +42,27 @@ export const EmployeeDashboard: React.FC = () => {
   if (isLoading || !metrics) {
     return (
       <div className="py-12 text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-indigo-600 border-t-transparent"></div>
-        <p className="mt-3 text-sm text-slate-700 font-bold">Loading Field Workspace...</p>
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[#FACC15] border-t-transparent"></div>
+        <p className="mt-3 text-sm text-[#666666] font-bold">Loading Field Workspace...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-6 rounded-2xl shadow-xs border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white text-[#111111] p-6 rounded-2xl shadow-xs border border-[#D1D1D1] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">Field Officer Mobile Portal</h1>
-          <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1">View assigned vehicle recovery cases, log field visits, and submit payment collections.</p>
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#FEF9C3] text-[#000000] text-[11px] font-bold uppercase tracking-wider mb-2 border border-[#EAB308]/40">
+            Field Operations
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold font-heading text-[#000000] tracking-tight">Personal Recovery Performance</h1>
+          <p className="text-sm text-[#666666] font-normal mt-1">Real-time overview of your assigned vehicle recovery portfolio, field visits, and collections.</p>
         </div>
         <Link
           to="/employee/cases"
-          className="min-h-[42px] inline-flex items-center justify-center px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition-all text-center uppercase tracking-wider"
+          className="min-h-[42px] inline-flex items-center justify-center px-5 py-2.5 bg-[#FACC15] hover:bg-[#FFD600] text-[#000000] font-bold text-[13px] sm:text-[14px] rounded-xl shadow-xs transition-all text-center border border-[#EAB308]"
         >
-          View My Assigned Cases
+          View My Assigned Cases →
         </Link>
       </div>
 
@@ -69,75 +72,79 @@ export const EmployeeDashboard: React.FC = () => {
           value={metrics.total_cases}
           subtext="My portfolio cases"
           icon={FolderOpen}
-          colorBg="bg-indigo-50"
-          colorText="text-indigo-600"
         />
         <DashboardCard
           title="Pending Recovery"
           value={formatCurrency(metrics.total_outstanding_amount)}
           subtext="Total assigned POS"
           icon={IndianRupee}
-          colorBg="bg-rose-50"
-          colorText="text-rose-600"
         />
         <DashboardCard
           title="My Total Collections"
           value={formatCurrency(metrics.total_collected_amount)}
           subtext="Collected by me"
           icon={CheckCircle2}
-          colorBg="bg-emerald-50"
-          colorText="text-emerald-600"
         />
         <DashboardCard
           title="Follow-ups Conducted"
           value={followups.length}
           subtext="Recent interactions"
           icon={PhoneCall}
-          colorBg="bg-amber-50"
-          colorText="text-amber-600"
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs">
-          <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
-            <h3 className="font-extrabold text-slate-900 dark:text-white text-sm uppercase tracking-wider">My High Priority Cases</h3>
-            <Link to="/employee/cases" className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300">View All →</Link>
+        <div className="bg-white rounded-2xl border border-[#D1D1D1] p-5 shadow-xs">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#E8E8E8]">
+            <h3 className="font-bold font-heading text-[#111111] text-[14px] uppercase tracking-wider">My High Priority Cases</h3>
+            <Link to="/employee/cases" className="text-xs font-semibold text-[#000000] hover:underline">View All →</Link>
           </div>
           <div className="space-y-3">
-            {myCases.map((c) => (
-              <div key={c.id} className="p-3.5 bg-slate-50 dark:bg-slate-850 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                <div>
-                  <p className="font-bold text-slate-900 dark:text-white text-xs">{c.customer_name} ({c.loan_account_number})</p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-mono font-bold">{c.registration_number || 'N/A'}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs font-extrabold text-rose-600 dark:text-rose-400">{formatCurrency(c.outstanding_amount || 0)}</p>
-                  <div className="mt-1 flex items-center justify-end gap-1">
-                    <PriorityBadge priority={c.priority} />
-                    <StatusBadge status={c.status} />
+            {myCases.length === 0 ? (
+              <p className="text-xs text-[#666666] py-4 text-center">No assigned cases at the moment.</p>
+            ) : (
+              myCases.map((c) => (
+                <div key={c.id} className="p-3.5 bg-[#FAFAFA] rounded-xl border border-[#E8E8E8] flex items-center justify-between hover:border-[#FACC15] transition-colors">
+                  <div>
+                    <p className="font-bold text-[#111111] text-xs">{c.customer_name} ({c.loan_account_number})</p>
+                    <p className="text-[11px] mt-1">
+                      <span className="font-mono bg-[#111111] text-[#FFFFFF] rounded px-1.5 py-0.5 border border-[#000000] font-bold">
+                        {c.registration_number || 'N/A'}
+                      </span>
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-black text-[#111111]">{formatCurrency(c.outstanding_amount || 0)}</p>
+                    <div className="mt-1.5 flex items-center justify-end gap-1">
+                      <PriorityBadge priority={c.priority} />
+                      <StatusBadge status={c.status} />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs">
-          <h3 className="font-extrabold text-slate-900 dark:text-white text-sm uppercase tracking-wider mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
+        <div className="bg-white rounded-2xl border border-[#D1D1D1] p-5 shadow-xs">
+          <h3 className="font-black text-[#111111] text-sm uppercase tracking-wider mb-4 pb-3 border-b border-[#E8E8E8]">
             Recent Follow-up Records
           </h3>
           <div className="space-y-3">
-            {followups.map((f) => (
-              <div key={f.id} className="p-3.5 bg-slate-50 dark:bg-slate-850 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="font-bold text-slate-900 dark:text-white">{f.customer_name}</span>
-                  <StatusBadge status={f.contact_result} />
+            {followups.length === 0 ? (
+              <p className="text-xs text-[#666666] py-4 text-center">No recent follow-ups recorded.</p>
+            ) : (
+              followups.map((f) => (
+                <div key={f.id} className="p-3.5 bg-[#FAFAFA] rounded-xl border border-[#E8E8E8] text-xs">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-bold text-[#111111]">{f.customer_name}</span>
+                    <StatusBadge status={f.contact_result} />
+                  </div>
+                  <p className="text-[#333333] italic font-medium">"{f.remarks || f.customer_response || 'Field interaction'}"</p>
+                  <p className="text-[11px] text-[#666666] font-semibold mt-1">{new Date(f.followup_date).toLocaleDateString()}</p>
                 </div>
-                <p className="text-slate-700 dark:text-slate-300 italic font-medium">"{f.remarks || f.customer_response || 'Field interaction'}"</p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold mt-1">{new Date(f.followup_date).toLocaleDateString()}</p>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>

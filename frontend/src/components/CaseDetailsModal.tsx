@@ -83,8 +83,8 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
   const chassisNo = String(recoveryCase.chassis_number || 'N/A').trim();
   const assetDesc = String(recoveryCase.asset_desc || recoveryCase.vehicle_model || 'Commercial Vehicle').trim();
   const phoneNo = String(recoveryCase.customer_phone || '').trim();
-  
-  // Payment Status: Check paid_unpaid or status
+
+  // Payment Status
   const rawStatus = String(recoveryCase.status || '').toUpperCase();
   const rawPaid = String(recoveryCase.paid_unpaid || '').toUpperCase();
   const isPaid = rawPaid === 'PAID' || rawStatus === 'PAID' || rawStatus === 'RECOVERED';
@@ -114,40 +114,43 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
       aria-labelledby="case-dossier-title"
     >
       <div
-        className="bg-[#FFFFFF] dark:bg-[#111111] text-[#111111] dark:text-[#FFFFFF] rounded-xl border border-[#D1D1D1] dark:border-[#333333] shadow-2xl w-full max-w-5xl max-h-[92vh] sm:max-h-[90vh] flex flex-col overflow-hidden"
+        className="bg-[#FFFFFF] text-[#111111] rounded-xl border border-[#D6D6D6] shadow-2xl w-full max-w-5xl max-h-[92vh] sm:max-h-[90vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ========================================================================= */}
-        {/* CASE HEADER (STICKY)                                                      */}
+        {/* CASE HEADER WITH YELLOW ACCENT LINE (STICKY)                              */}
         {/* ========================================================================= */}
-        <div className="px-4 sm:px-6 py-4 bg-[#F7F7F7] dark:bg-[#1A1A1A] border-b border-[#E5E5E5] dark:border-[#333333] flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-4">
+        <div className="relative px-4 sm:px-6 py-4 bg-[#FFFFFF] border-b border-[#E5E5E5] flex flex-wrap items-center justify-between gap-3 shrink-0">
+          {/* Subtle Top Yellow Accent Line */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FFD600] via-[#FACC15] to-[#EAB308]"></div>
+
+          <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-4 mt-1">
             <div>
-              <span className="text-[11px] font-bold text-[#666666] dark:text-[#999999] uppercase tracking-wider block">
+              <span className="text-[11px] font-semibold text-[#666666] uppercase tracking-wider block">
                 Recovery Case
               </span>
               <div className="flex items-center gap-2 mt-0.5">
                 <h2
                   id="case-dossier-title"
-                  className="text-xl sm:text-2xl font-black text-[#000000] dark:text-[#FFFFFF] font-mono tracking-tight"
+                  className="text-xl sm:text-2xl font-bold text-[#000000] font-heading tracking-tight"
                 >
                   {recoveryCode}
                 </h2>
-                <span className="text-[#D1D1D1] dark:text-[#444444] hidden sm:inline">|</span>
+                <span className="text-[#D6D6D6] hidden sm:inline">|</span>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-semibold text-[#666666] dark:text-[#999999]">Proposal:</span>
-                  <span className="font-mono font-bold text-sm sm:text-base text-[#000000] dark:text-[#FFFFFF]">
+                  <span className="text-[12px] font-medium text-[#666666]">Proposal:</span>
+                  <span className="font-mono font-semibold text-sm sm:text-base text-[#000000] tabular-nums">
                     {proposalNo}
                   </span>
                   <button
                     type="button"
                     onClick={() => handleCopy(proposalNo, 'hdr-prop')}
-                    className="p-1 text-[#666666] hover:text-[#000000] dark:text-[#999999] dark:hover:text-[#FFFFFF] transition-colors cursor-pointer"
+                    className="p-1 text-[#666666] hover:text-[#000000] transition-colors cursor-pointer"
                     title="Copy Proposal No"
                     aria-label="Copy Proposal Number"
                   >
                     {copiedKey === 'hdr-prop' ? (
-                      <Check className="w-3.5 h-3.5 text-[#000000] dark:text-[#FFFFFF]" />
+                      <Check className="w-3.5 h-3.5 text-[#000000]" />
                     ) : (
                       <Copy className="w-3.5 h-3.5" />
                     )}
@@ -157,13 +160,13 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
             </div>
           </div>
 
-          {/* Grayscale Header Badges */}
+          {/* Badges: Priority + Paid with Black/White/Yellow */}
           <div className="flex items-center gap-2">
             <span
               className={`px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wider ${
                 priority === 'CRITICAL' || priority === 'HIGH'
-                  ? 'bg-[#000000] text-[#FFFFFF] dark:bg-[#FFFFFF] dark:text-[#000000]'
-                  : 'bg-[#E5E5E5] text-[#111111] dark:bg-[#2A2A2A] dark:text-[#E5E5E5] border border-[#D1D1D1] dark:border-[#444444]'
+                  ? 'bg-[#000000] text-[#FFFFFF]'
+                  : 'bg-[#FEF9C3] text-[#111111] border border-[#EAB308]'
               }`}
             >
               {priority}
@@ -172,8 +175,8 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
             <span
               className={`px-2.5 py-1 rounded text-xs font-black uppercase tracking-wider ${
                 isPaid
-                  ? 'bg-[#E5E5E5] text-[#111111] dark:bg-[#2A2A2A] dark:text-[#FFFFFF] border border-[#D1D1D1] dark:border-[#444444]'
-                  : 'bg-[#000000] text-[#FFFFFF] dark:bg-[#FFFFFF] dark:text-[#000000]'
+                  ? 'bg-[#FACC15] text-[#000000] border border-[#EAB308]'
+                  : 'bg-[#FEF9C3] text-[#111111] border border-[#EAB308]'
               }`}
             >
               {paymentStatus}
@@ -182,7 +185,7 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[#666666] hover:text-[#000000] hover:bg-[#E5E5E5] dark:text-[#999999] dark:hover:text-[#FFFFFF] dark:hover:bg-[#2A2A2A] transition-colors ml-1 cursor-pointer"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-[#666666] hover:text-[#000000] hover:bg-[#F2F2F2] transition-colors ml-1 cursor-pointer"
               aria-label="Close Case Dossier"
               title="Close"
             >
@@ -194,23 +197,23 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
         {/* ========================================================================= */}
         {/* INTERNAL SCROLLABLE BODY                                                  */}
         {/* ========================================================================= */}
-        <div className="p-4 sm:p-6 space-y-6 overflow-y-auto flex-1 text-[#111111] dark:text-[#FFFFFF]">
+        <div className="p-4 sm:p-6 space-y-6 overflow-y-auto flex-1 text-[#111111] bg-[#FAFAFA]">
           {/* ======================================================================= */}
           {/* SECTION 1: CASE OVERVIEW                                                */}
           {/* ======================================================================= */}
-          <section className="bg-[#FFFFFF] dark:bg-[#161616] rounded-xl border border-[#E5E5E5] dark:border-[#333333] p-4 sm:p-5">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-[#666666] dark:text-[#999999] mb-3 pb-2 border-b border-[#F2F2F2] dark:border-[#262626] flex items-center gap-1.5">
-              <FileText className="w-4 h-4 text-[#444444] dark:text-[#999999]" />
-              <span>Section 1: Case Overview</span>
+          <section className="bg-[#FFFFFF] rounded-xl border border-[#D6D6D6] p-4 sm:p-5 shadow-xs">
+            <h3 className="text-[13px] sm:text-[14px] font-bold uppercase tracking-wider text-[#111111] mb-3 pb-2 border-b border-[#E5E5E5] flex items-center gap-1.5 font-heading">
+              <FileText className="w-4 h-4 text-[#111111]" />
+              <span>Case Overview</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4">
               {/* Recovery ID */}
               <div>
-                <span className="text-xs font-semibold text-[#666666] dark:text-[#999999] uppercase block mb-1">
+                <span className="text-[12px] font-medium text-[#666666] uppercase block mb-1">
                   Recovery ID
                 </span>
-                <span className="font-mono font-bold text-base sm:text-lg text-[#000000] dark:text-[#FFFFFF] block break-all">
+                <span className="font-mono font-bold text-base sm:text-lg text-[#000000] block break-all">
                   {recoveryCode}
                 </span>
               </div>
@@ -218,53 +221,65 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
               {/* Proposal No */}
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[#666666] dark:text-[#999999] uppercase block mb-1">
+                  <span className="text-[12px] font-medium text-[#666666] uppercase block mb-1">
                     Proposal No
                   </span>
                   <button
                     type="button"
                     onClick={() => handleCopy(proposalNo, 'ov-prop')}
-                    className="p-0.5 text-[#666666] hover:text-[#000000] dark:text-[#999999] dark:hover:text-[#FFFFFF] cursor-pointer"
+                    className="p-0.5 text-[#666666] hover:text-[#000000] cursor-pointer"
                     title="Copy Proposal No"
                   >
                     {copiedKey === 'ov-prop' ? (
-                      <Check className="w-3.5 h-3.5 text-[#000000] dark:text-[#FFFFFF]" />
+                      <Check className="w-3.5 h-3.5 text-[#000000]" />
                     ) : (
                       <Copy className="w-3.5 h-3.5" />
                     )}
                   </button>
                 </div>
-                <span className="font-mono font-bold text-base sm:text-lg text-[#000000] dark:text-[#FFFFFF] block break-all">
+                <span className="font-mono font-semibold text-base sm:text-[17px] text-[#000000] block break-all tabular-nums">
                   {proposalNo}
                 </span>
               </div>
 
               {/* Payment Status */}
               <div>
-                <span className="text-xs font-semibold text-[#666666] dark:text-[#999999] uppercase block mb-1">
+                <span className="text-[12px] font-medium text-[#666666] uppercase block mb-1">
                   Payment Status
                 </span>
-                <span className="inline-block mt-0.5 px-3 py-1 rounded text-xs font-black uppercase tracking-wider bg-[#E5E5E5] text-[#111111] dark:bg-[#2A2A2A] dark:text-[#FFFFFF] border border-[#D1D1D1] dark:border-[#555555]">
+                <span
+                  className={`inline-block mt-0.5 px-3 py-1 rounded text-xs font-black uppercase tracking-wider ${
+                    isPaid
+                      ? 'bg-[#FACC15] text-[#000000] border border-[#EAB308]'
+                      : 'bg-[#FEF9C3] text-[#111111] border border-[#EAB308]'
+                  }`}
+                >
                   {paymentStatus}
                 </span>
               </div>
 
               {/* Priority */}
               <div>
-                <span className="text-xs font-semibold text-[#666666] dark:text-[#999999] uppercase block mb-1">
+                <span className="text-[12px] font-medium text-[#666666] uppercase block mb-1">
                   Priority
                 </span>
-                <span className="inline-block mt-0.5 px-3 py-1 rounded text-xs font-bold uppercase tracking-wider bg-[#000000] text-[#FFFFFF] dark:bg-[#FFFFFF] dark:text-[#000000]">
+                <span
+                  className={`inline-block mt-0.5 px-3 py-1 rounded text-xs font-bold uppercase tracking-wider ${
+                    priority === 'CRITICAL' || priority === 'HIGH'
+                      ? 'bg-[#000000] text-[#FFFFFF]'
+                      : 'bg-[#FEF9C3] text-[#111111] border border-[#EAB308]'
+                  }`}
+                >
                   {priority}
                 </span>
               </div>
 
               {/* Case Status */}
               <div>
-                <span className="text-xs font-semibold text-[#666666] dark:text-[#999999] uppercase block mb-1">
+                <span className="text-[12px] font-medium text-[#666666] uppercase block mb-1">
                   Case Status
                 </span>
-                <span className="font-bold text-sm sm:text-base text-[#000000] dark:text-[#FFFFFF] block mt-1">
+                <span className="font-semibold text-sm sm:text-base text-[#000000] block mt-1">
                   {caseStatus}
                 </span>
               </div>
@@ -272,70 +287,62 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
           </section>
 
           {/* ======================================================================= */}
-          {/* SECTION 2: FINANCIAL INFORMATION (WHITE CARDS WITH BLACK TEXT)          */}
+          {/* SECTION 2: FINANCIAL SUMMARY (WHITE CARDS WITH YELLOW ACCENT BORDER)    */}
           {/* ======================================================================= */}
           <section className="space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-[#666666] dark:text-[#999999] flex items-center gap-1.5">
-              <IndianRupee className="w-4 h-4 text-[#444444] dark:text-[#999999]" />
-              <span>Section 2: Financial Information</span>
+            <h3 className="text-[13px] sm:text-[14px] font-bold uppercase tracking-wider text-[#111111] flex items-center gap-1.5 font-heading">
+              <IndianRupee className="w-4 h-4 text-[#111111]" />
+              <span>Financial Information</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
               {/* POS */}
-              <div className="p-4 bg-[#FFFFFF] dark:bg-[#1A1A1A] rounded-xl border border-[#D1D1D1] dark:border-[#333333]">
-                <span className="text-xs font-semibold text-[#666666] dark:text-[#999999] uppercase block">
+              <div className="p-4 bg-[#FFFFFF] rounded-xl border border-[#D6D6D6] border-l-4 border-l-[#FACC15] shadow-xs">
+                <span className="text-[12px] font-semibold text-[#666666] uppercase tracking-wider block">
                   POS (Principal Outstanding)
                 </span>
-                <span className="text-xl sm:text-2xl font-bold font-mono text-[#000000] dark:text-[#FFFFFF] mt-1.5 block">
+                <span className="text-xl sm:text-2xl font-bold font-heading tabular-nums text-[#000000] mt-1.5 block">
                   {formatCurrency(posAmount)}
                 </span>
-                <span className="text-[11px] text-[#666666] dark:text-[#999999] font-medium mt-0.5 block">
-                  Principal Balance
-                </span>
+                <div className="w-8 h-0.5 bg-[#FACC15] mt-2 rounded"></div>
               </div>
 
               {/* EMI Amount */}
-              <div className="p-4 bg-[#FFFFFF] dark:bg-[#1A1A1A] rounded-xl border border-[#D1D1D1] dark:border-[#333333]">
-                <span className="text-xs font-semibold text-[#666666] dark:text-[#999999] uppercase block">
+              <div className="p-4 bg-[#FFFFFF] rounded-xl border border-[#D6D6D6] border-l-4 border-l-[#FACC15] shadow-xs">
+                <span className="text-[12px] font-semibold text-[#666666] uppercase tracking-wider block">
                   EMI Amount
                 </span>
-                <span className="text-xl sm:text-2xl font-bold font-mono text-[#000000] dark:text-[#FFFFFF] mt-1.5 block">
+                <span className="text-xl sm:text-2xl font-bold font-heading tabular-nums text-[#000000] mt-1.5 block">
                   {formatCurrency(emiAmount)}
                 </span>
-                <span className="text-[11px] text-[#666666] dark:text-[#999999] font-medium mt-0.5 block">
-                  Monthly Installment
-                </span>
+                <div className="w-8 h-0.5 bg-[#FACC15] mt-2 rounded"></div>
               </div>
 
               {/* Total Due */}
-              <div className="p-4 bg-[#FFFFFF] dark:bg-[#1A1A1A] rounded-xl border-2 border-[#000000] dark:border-[#FFFFFF]">
-                <span className="text-xs font-black text-[#000000] dark:text-[#FFFFFF] uppercase block">
+              <div className="p-4 bg-[#FFFFFF] rounded-xl border-2 border-[#000000] border-l-4 border-l-[#FACC15] shadow-sm">
+                <span className="text-[12px] font-bold text-[#000000] uppercase tracking-wider block">
                   Total Due / Overdue
                 </span>
-                <span className="text-xl sm:text-2xl font-black font-mono text-[#000000] dark:text-[#FFFFFF] mt-1.5 block">
+                <span className="text-xl sm:text-2xl font-extrabold font-heading tabular-nums text-[#000000] mt-1.5 block">
                   {formatCurrency(totalDue)}
                 </span>
-                <span className="text-[11px] text-[#444444] dark:text-[#D1D1D1] font-semibold mt-0.5 block">
-                  Immediate Collection Target
-                </span>
+                <div className="w-12 h-1 bg-[#FACC15] mt-2 rounded"></div>
               </div>
 
               {/* BOM Bucket / DPD */}
-              <div className="p-4 bg-[#FFFFFF] dark:bg-[#1A1A1A] rounded-xl border border-[#D1D1D1] dark:border-[#333333]">
-                <span className="text-xs font-semibold text-[#666666] dark:text-[#999999] uppercase block">
+              <div className="p-4 bg-[#FFFFFF] rounded-xl border border-[#D6D6D6] border-l-4 border-l-[#FACC15] shadow-xs">
+                <span className="text-[12px] font-semibold text-[#666666] uppercase tracking-wider block">
                   BOM Bucket / DPD
                 </span>
                 <div className="flex items-baseline gap-2 mt-1.5">
-                  <span className="text-xl sm:text-2xl font-bold font-mono text-[#000000] dark:text-[#FFFFFF]">
+                  <span className="text-xl sm:text-2xl font-bold font-heading tabular-nums text-[#000000]">
                     {bomBucket.startsWith('BOM') ? bomBucket : `BOM ${bomBucket}`}
                   </span>
-                  <span className="text-xs font-bold font-mono text-[#444444] dark:text-[#D1D1D1]">
+                  <span className="text-xs font-semibold tabular-nums text-[#333333]">
                     ({dpdDays} Days)
                   </span>
                 </div>
-                <span className="text-[11px] text-[#666666] dark:text-[#999999] font-medium mt-0.5 block">
-                  Aging Delinquency
-                </span>
+                <div className="w-8 h-0.5 bg-[#FACC15] mt-2 rounded"></div>
               </div>
             </div>
           </section>
@@ -347,22 +354,21 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
             {/* ===================================================================== */}
             {/* SECTION 3: CUSTOMER INFORMATION                                       */}
             {/* ===================================================================== */}
-            <section className="bg-[#FFFFFF] dark:bg-[#1A1A1A] rounded-xl border border-[#D1D1D1] dark:border-[#333333] p-4 sm:p-5 space-y-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-[#666666] dark:text-[#999999] border-b border-[#E5E5E5] dark:border-[#333333] pb-2.5 flex items-center gap-1.5">
-                <User className="w-4 h-4 text-[#444444] dark:text-[#999999]" />
-                <span>Section 3: Customer Information</span>
+            <section className="bg-[#FFFFFF] rounded-xl border border-[#D6D6D6] p-4 sm:p-5 space-y-4 shadow-xs">
+              <h3 className="text-[13px] sm:text-[14px] font-bold uppercase tracking-wider text-[#111111] border-b border-[#E5E5E5] pb-2.5 flex items-center gap-1.5 font-heading">
+                <User className="w-4 h-4 text-[#111111]" />
+                <span>Customer Information</span>
               </h3>
 
               <div className="space-y-3.5">
-                {/* 2-Col subgrid for Name & Phone on desktop / 1-col on mobile */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   {/* Customer Name */}
                   <div>
-                    <span className="text-xs font-semibold text-[#666666] dark:text-[#999999] uppercase block mb-1">
+                    <span className="text-[12px] font-medium text-[#666666] uppercase tracking-wider block mb-1">
                       Customer Name
                     </span>
                     <span
-                      className="text-base sm:text-[17px] font-bold text-[#000000] dark:text-[#FFFFFF] uppercase block"
+                      className="text-base sm:text-[17px] font-semibold text-[#111111] uppercase block"
                       style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
                     >
                       {customerName}
@@ -372,18 +378,18 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
                   {/* MO NO */}
                   <div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-[#666666] dark:text-[#999999] uppercase block mb-1">
+                      <span className="text-[12px] font-medium text-[#666666] uppercase tracking-wider block mb-1">
                         MO NO (Mobile Number)
                       </span>
                       {phoneNo && (
                         <button
                           type="button"
                           onClick={() => handleCopy(phoneNo, 'cust-phone')}
-                          className="p-0.5 text-[#666666] hover:text-[#000000] dark:text-[#999999] dark:hover:text-[#FFFFFF] cursor-pointer"
+                          className="p-0.5 text-[#666666] hover:text-[#000000] cursor-pointer"
                           title="Copy Mobile No"
                         >
                           {copiedKey === 'cust-phone' ? (
-                            <Check className="w-3.5 h-3.5 text-[#000000] dark:text-[#FFFFFF]" />
+                            <Check className="w-3.5 h-3.5 text-[#000000]" />
                           ) : (
                             <Copy className="w-3.5 h-3.5" />
                           )}
@@ -393,33 +399,33 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
                     {phoneNo ? (
                       <a
                         href={`tel:${phoneNo}`}
-                        className="inline-flex items-center gap-1.5 text-base sm:text-[17px] font-mono font-bold text-[#000000] dark:text-[#FFFFFF] hover:underline"
+                        className="inline-flex items-center gap-1.5 text-base sm:text-[17px] font-mono font-semibold text-[#111111] hover:underline tabular-nums"
                       >
-                        <Phone className="w-3.5 h-3.5 shrink-0 text-[#444444] dark:text-[#999999]" />
+                        <Phone className="w-3.5 h-3.5 shrink-0 text-[#111111]" />
                         <span>{phoneNo}</span>
                       </a>
                     ) : (
-                      <span className="text-sm font-semibold text-[#666666]">N/A</span>
+                      <span className="text-sm font-medium text-[#666666]">N/A</span>
                     )}
                   </div>
                 </div>
 
-                {/* Residence Address (Full multiline wrap, no truncation) */}
-                <div className="pt-2 border-t border-[#F2F2F2] dark:border-[#262626]">
+                {/* Residence Address */}
+                <div className="pt-2 border-t border-[#F2F2F2]">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-semibold text-[#666666] dark:text-[#999999] uppercase flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5 text-[#666666] dark:text-[#999999]" />
+                    <span className="text-[12px] font-medium text-[#666666] uppercase tracking-wider flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5 text-[#666666]" />
                       <span>Residence Address</span>
                     </span>
                     <button
                       type="button"
                       onClick={() => handleCopy(fullAddress, 'cust-addr')}
-                      className="text-xs font-bold text-[#444444] dark:text-[#CCCCCC] hover:text-[#000000] dark:hover:text-[#FFFFFF] flex items-center gap-1 cursor-pointer"
+                      className="text-xs font-semibold text-[#444444] hover:text-[#000000] flex items-center gap-1 cursor-pointer"
                       title="Copy Full Address"
                     >
                       {copiedKey === 'cust-addr' ? (
                         <>
-                          <Check className="w-3 h-3 text-[#000000] dark:text-[#FFFFFF]" />
+                          <Check className="w-3 h-3 text-[#000000]" />
                           <span className="text-[11px]">Copied</span>
                         </>
                       ) : (
@@ -430,9 +436,9 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
                       )}
                     </button>
                   </div>
-                  <div className="p-3 bg-[#F7F7F7] dark:bg-[#111111] rounded-lg border border-[#E5E5E5] dark:border-[#333333]">
+                  <div className="p-3 bg-[#FAFAFA] rounded-lg border border-[#E5E5E5]">
                     <p
-                      className="text-sm sm:text-[15px] font-medium text-[#111111] dark:text-[#E5E5E5] leading-relaxed whitespace-pre-line"
+                      className="text-sm sm:text-[15px] font-normal text-[#111111] leading-relaxed whitespace-pre-line"
                       style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
                     >
                       {fullAddress}
@@ -441,22 +447,29 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
                 </div>
 
                 {/* City & Territory */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-[#F2F2F2] dark:border-[#262626]">
+                {/* City & Territory */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-[#F2F2F2]">
                   <div>
-                    <span className="text-xs font-semibold text-[#666666] dark:text-[#999999] uppercase block mb-0.5">
+                    <span className="text-[12px] font-medium text-[#666666] uppercase tracking-wider block mb-0.5">
                       City & Territory
                     </span>
-                    <span className="text-sm sm:text-[15px] font-bold text-[#000000] dark:text-[#FFFFFF] block">
+                    <span className="text-sm sm:text-[15px] font-semibold text-[#111111] block">
                       {recoveryCase.customer_city || 'Nashik'}
                       {recoveryCase.customer_state ? `, ${recoveryCase.customer_state}` : ''}
                     </span>
                   </div>
 
                   <div>
-                    <span className="text-xs font-semibold text-[#666666] dark:text-[#999999] uppercase block mb-0.5">
+                    <span className="text-[12px] font-medium text-[#666666] uppercase tracking-wider block mb-0.5">
                       PAID / UNPAID Field
                     </span>
-                    <span className="inline-block px-2.5 py-0.5 rounded text-xs font-black uppercase tracking-wider bg-[#E5E5E5] text-[#111111] dark:bg-[#2A2A2A] dark:text-[#FFFFFF] border border-[#D1D1D1] dark:border-[#555555]">
+                    <span
+                      className={`inline-block px-2.5 py-0.5 rounded text-xs font-black uppercase tracking-wider ${
+                        isPaid
+                          ? 'bg-[#FACC15] text-[#000000] border border-[#EAB308]'
+                          : 'bg-[#FEF9C3] text-[#111111] border border-[#EAB308]'
+                      }`}
+                    >
                       {paymentStatus}
                     </span>
                   </div>
@@ -467,48 +480,47 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
             {/* ===================================================================== */}
             {/* SECTION 4: VEHICLE & ASSET INFORMATION                                */}
             {/* ===================================================================== */}
-            <section className="bg-[#FFFFFF] dark:bg-[#1A1A1A] rounded-xl border border-[#D1D1D1] dark:border-[#333333] p-4 sm:p-5 space-y-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-[#666666] dark:text-[#999999] border-b border-[#E5E5E5] dark:border-[#333333] pb-2.5 flex items-center gap-1.5">
-                <Truck className="w-4 h-4 text-[#444444] dark:text-[#999999]" />
-                <span>Section 4: Vehicle & Asset Information</span>
+            <section className="bg-[#FFFFFF] rounded-xl border border-[#D6D6D6] p-4 sm:p-5 space-y-4 shadow-xs">
+              <h3 className="text-[13px] sm:text-[14px] font-bold uppercase tracking-wider text-[#111111] border-b border-[#E5E5E5] pb-2.5 flex items-center gap-1.5 font-heading">
+                <Truck className="w-4 h-4 text-[#111111]" />
+                <span>Vehicle & Asset Information</span>
               </h3>
 
               <div className="space-y-3.5">
-                {/* 2-Col subgrid for Registration & Asset Desc */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  {/* Registration Number (Badge) */}
+                  {/* Registration Number (Black Badge) */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-semibold text-[#666666] dark:text-[#999999] uppercase block">
+                      <span className="text-[12px] font-medium text-[#666666] uppercase tracking-wider block">
                         Registration Number
                       </span>
                       {regNo !== 'N/A' && (
                         <button
                           type="button"
                           onClick={() => handleCopy(regNo, 'veh-reg')}
-                          className="p-0.5 text-[#666666] hover:text-[#000000] dark:text-[#999999] dark:hover:text-[#FFFFFF] cursor-pointer"
+                          className="p-0.5 text-[#666666] hover:text-[#000000] cursor-pointer"
                           title="Copy Registration Number"
                         >
                           {copiedKey === 'veh-reg' ? (
-                            <Check className="w-3.5 h-3.5 text-[#000000] dark:text-[#FFFFFF]" />
+                            <Check className="w-3.5 h-3.5 text-[#000000]" />
                           ) : (
                             <Copy className="w-3.5 h-3.5" />
                           )}
                         </button>
                       )}
                     </div>
-                    <span className="inline-flex items-center px-3 py-1.5 rounded-md font-mono font-black text-sm sm:text-base bg-[#000000] text-[#FFFFFF] dark:bg-[#FFFFFF] dark:text-[#000000] tracking-wider">
+                    <span className="inline-flex items-center px-3 py-1.5 rounded-md font-mono font-bold text-sm sm:text-base bg-[#111111] text-[#FFFFFF] tracking-wider">
                       {regNo}
                     </span>
                   </div>
 
                   {/* Asset Description */}
                   <div>
-                    <span className="text-xs font-semibold text-[#666666] dark:text-[#999999] uppercase block mb-1">
+                    <span className="text-[12px] font-medium text-[#666666] uppercase tracking-wider block mb-1">
                       Asset Description
                     </span>
                     <span
-                      className="text-base sm:text-[17px] font-bold text-[#000000] dark:text-[#FFFFFF] block"
+                      className="text-base sm:text-[17px] font-semibold text-[#111111] block"
                       style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
                     >
                       {assetDesc}
@@ -516,23 +528,23 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
                   </div>
                 </div>
 
-                {/* Engine No & Chassis No (Full values, no truncation, wrap naturally) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2 border-t border-[#F2F2F2] dark:border-[#262626]">
+                {/* Engine No & Chassis No */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2 border-t border-[#F2F2F2]">
                   {/* Engine No */}
-                  <div className="p-3 bg-[#F7F7F7] dark:bg-[#111111] rounded-lg border border-[#E5E5E5] dark:border-[#333333]">
+                  <div className="p-3 bg-[#FAFAFA] rounded-lg border border-[#E5E5E5]">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-semibold text-[#666666] dark:text-[#999999] uppercase block">
+                      <span className="text-[12px] font-medium text-[#666666] uppercase tracking-wider block">
                         Engine No
                       </span>
                       {engineNo !== 'N/A' && (
                         <button
                           type="button"
                           onClick={() => handleCopy(engineNo, 'veh-eng')}
-                          className="p-0.5 text-[#666666] hover:text-[#000000] dark:text-[#999999] dark:hover:text-[#FFFFFF] cursor-pointer"
+                          className="p-0.5 text-[#666666] hover:text-[#000000] cursor-pointer"
                           title="Copy Engine No"
                         >
                           {copiedKey === 'veh-eng' ? (
-                            <Check className="w-3.5 h-3.5 text-[#000000] dark:text-[#FFFFFF]" />
+                            <Check className="w-3.5 h-3.5 text-[#000000]" />
                           ) : (
                             <Copy className="w-3.5 h-3.5" />
                           )}
@@ -540,7 +552,7 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
                       )}
                     </div>
                     <span
-                      className="font-mono text-sm sm:text-base font-bold text-[#000000] dark:text-[#FFFFFF] block"
+                      className="font-mono text-sm sm:text-[15px] font-semibold text-[#111111] block"
                       style={{ wordBreak: 'break-all', overflowWrap: 'anywhere' }}
                     >
                       {engineNo}
@@ -548,20 +560,20 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
                   </div>
 
                   {/* Chassis No */}
-                  <div className="p-3 bg-[#F7F7F7] dark:bg-[#111111] rounded-lg border border-[#E5E5E5] dark:border-[#333333]">
+                  <div className="p-3 bg-[#FAFAFA] rounded-lg border border-[#E5E5E5]">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-semibold text-[#666666] dark:text-[#999999] uppercase block">
+                      <span className="text-[12px] font-medium text-[#666666] uppercase tracking-wider block">
                         Chassis No
                       </span>
                       {chassisNo !== 'N/A' && (
                         <button
                           type="button"
                           onClick={() => handleCopy(chassisNo, 'veh-chs')}
-                          className="p-0.5 text-[#666666] hover:text-[#000000] dark:text-[#999999] dark:hover:text-[#FFFFFF] cursor-pointer"
+                          className="p-0.5 text-[#666666] hover:text-[#000000] cursor-pointer"
                           title="Copy Chassis No"
                         >
                           {copiedKey === 'veh-chs' ? (
-                            <Check className="w-3.5 h-3.5 text-[#000000] dark:text-[#FFFFFF]" />
+                            <Check className="w-3.5 h-3.5 text-[#000000]" />
                           ) : (
                             <Copy className="w-3.5 h-3.5" />
                           )}
@@ -569,7 +581,7 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
                       )}
                     </div>
                     <span
-                      className="font-mono text-sm sm:text-base font-bold text-[#000000] dark:text-[#FFFFFF] block"
+                      className="font-mono text-sm sm:text-[15px] font-semibold text-[#111111] block"
                       style={{ wordBreak: 'break-all', overflowWrap: 'anywhere' }}
                     >
                       {chassisNo}
@@ -581,47 +593,47 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
           </div>
 
           {/* ======================================================================= */}
-          {/* SECTION 5: ADDITIONAL INFORMATION & SYSTEM TIMESTAMPS                   */}
+          {/* SECTION 5: ADDITIONAL OPERATIONAL INFORMATION                           */}
           {/* ======================================================================= */}
-          <section className="bg-[#FFFFFF] dark:bg-[#161616] rounded-xl border border-[#E5E5E5] dark:border-[#333333] p-4 sm:p-5">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-[#666666] dark:text-[#999999] mb-3 pb-2 border-b border-[#F2F2F2] dark:border-[#262626] flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-[#444444] dark:text-[#999999]" />
-              <span>Section 5: Additional Operational Information</span>
+          <section className="bg-[#FFFFFF] rounded-xl border border-[#D6D6D6] p-4 sm:p-5 shadow-xs">
+            <h3 className="text-[13px] sm:text-[14px] font-bold uppercase tracking-wider text-[#111111] mb-3 pb-2 border-b border-[#E5E5E5] flex items-center gap-1.5 font-heading">
+              <ShieldCheck className="w-4 h-4 text-[#111111]" />
+              <span>Additional Information</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 text-xs">
               <div>
-                <span className="text-xs font-semibold text-[#666666] dark:text-[#999999] uppercase block mb-1">
+                <span className="text-[12px] font-medium text-[#666666] uppercase tracking-wider block mb-1">
                   Assigned Officer
                 </span>
-                <span className="text-sm sm:text-base font-bold text-[#000000] dark:text-[#FFFFFF] block">
+                <span className="text-sm sm:text-base font-semibold text-[#111111] block">
                   {assignedOfficer}
                 </span>
               </div>
 
               <div>
-                <span className="text-xs font-semibold text-[#666666] dark:text-[#999999] uppercase block mb-1">
+                <span className="text-[12px] font-medium text-[#666666] uppercase tracking-wider block mb-1">
                   Supervising Manager
                 </span>
-                <span className="text-sm sm:text-base font-bold text-[#000000] dark:text-[#FFFFFF] block">
+                <span className="text-sm sm:text-base font-semibold text-[#111111] block">
                   {assignedManager}
                 </span>
               </div>
 
               <div>
-                <span className="text-xs font-semibold text-[#666666] dark:text-[#999999] uppercase block mb-1">
+                <span className="text-[12px] font-medium text-[#666666] uppercase tracking-wider block mb-1">
                   Last Follow-up Date
                 </span>
-                <span className="text-sm sm:text-base font-semibold text-[#111111] dark:text-[#E5E5E5] block">
+                <span className="text-sm sm:text-base font-semibold text-[#111111] block tabular-nums">
                   {lastFollowup}
                 </span>
               </div>
 
               <div>
-                <span className="text-xs font-semibold text-[#666666] dark:text-[#999999] uppercase block mb-1">
+                <span className="text-[12px] font-medium text-[#666666] uppercase tracking-wider block mb-1">
                   Created In System
                 </span>
-                <span className="text-sm sm:text-base font-semibold text-[#111111] dark:text-[#E5E5E5] block">
+                <span className="text-sm sm:text-base font-semibold text-[#111111] block tabular-nums">
                   {createdDate}
                 </span>
               </div>
@@ -632,15 +644,15 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
         {/* ========================================================================= */}
         {/* CASE OPERATIONS ACTION BAR (STICKY BOTTOM)                                */}
         {/* ========================================================================= */}
-        <div className="px-4 sm:px-6 py-3.5 bg-[#F7F7F7] dark:bg-[#1A1A1A] border-t border-[#E5E5E5] dark:border-[#333333] flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="px-4 sm:px-6 py-3.5 bg-[#FFFFFF] border-t border-[#D6D6D6] flex flex-wrap items-center justify-between gap-3 shrink-0">
           <div className="flex flex-wrap items-center gap-2">
             {onAssign && (
               <button
                 type="button"
                 onClick={onAssign}
-                className="min-h-[44px] px-4 py-2 bg-[#FFFFFF] hover:bg-[#E5E5E5] dark:bg-[#222222] dark:hover:bg-[#333333] text-[#000000] dark:text-[#FFFFFF] border border-[#D1D1D1] dark:border-[#444444] rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="min-h-[44px] px-4 py-2 bg-[#FFFFFF] hover:bg-[#F2F2F2] text-[#111111] border border-[#D6D6D6] rounded-lg text-[13px] sm:text-[14px] font-semibold transition-colors flex items-center gap-1.5 cursor-pointer"
               >
-                <UserCheck className="w-4 h-4 text-[#000000] dark:text-[#FFFFFF]" />
+                <UserCheck className="w-4 h-4 text-[#111111]" />
                 <span>Assign Staff</span>
               </button>
             )}
@@ -649,9 +661,9 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
               <button
                 type="button"
                 onClick={onUpdateStatus}
-                className="min-h-[44px] px-4 py-2 bg-[#FFFFFF] hover:bg-[#E5E5E5] dark:bg-[#222222] dark:hover:bg-[#333333] text-[#000000] dark:text-[#FFFFFF] border border-[#D1D1D1] dark:border-[#444444] rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="min-h-[44px] px-4 py-2 bg-[#FFFFFF] hover:bg-[#F2F2F2] text-[#111111] border border-[#D6D6D6] rounded-lg text-[13px] sm:text-[14px] font-semibold transition-colors flex items-center gap-1.5 cursor-pointer"
               >
-                <Layers className="w-4 h-4 text-[#000000] dark:text-[#FFFFFF]" />
+                <Layers className="w-4 h-4 text-[#111111]" />
                 <span>Update Status</span>
               </button>
             )}
@@ -660,9 +672,9 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
               <button
                 type="button"
                 onClick={onRecordFollowup}
-                className="min-h-[44px] px-4 py-2 bg-[#FFFFFF] hover:bg-[#E5E5E5] dark:bg-[#222222] dark:hover:bg-[#333333] text-[#000000] dark:text-[#FFFFFF] border border-[#D1D1D1] dark:border-[#444444] rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="min-h-[44px] px-4 py-2 bg-[#FFFFFF] hover:bg-[#F2F2F2] text-[#111111] border border-[#D6D6D6] rounded-lg text-[13px] sm:text-[14px] font-semibold transition-colors flex items-center gap-1.5 cursor-pointer"
               >
-                <PhoneCall className="w-4 h-4 text-[#000000] dark:text-[#FFFFFF]" />
+                <PhoneCall className="w-4 h-4 text-[#111111]" />
                 <span>Record Follow-up</span>
               </button>
             )}
@@ -671,9 +683,9 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
               <button
                 type="button"
                 onClick={onRecordPayment}
-                className="min-h-[44px] px-4 py-2 bg-[#FFFFFF] hover:bg-[#E5E5E5] dark:bg-[#222222] dark:hover:bg-[#333333] text-[#000000] dark:text-[#FFFFFF] border border-[#D1D1D1] dark:border-[#444444] rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="min-h-[44px] px-4 py-2 bg-[#FACC15] hover:bg-[#EAB308] text-[#000000] border border-[#EAB308] rounded-lg text-[13px] sm:text-[14px] font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
-                <CreditCard className="w-4 h-4 text-[#000000] dark:text-[#FFFFFF]" />
+                <CreditCard className="w-4 h-4 text-[#000000]" />
                 <span>Collect Payment</span>
               </button>
             )}
@@ -682,7 +694,7 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[44px] px-6 py-2 bg-[#000000] hover:bg-[#222222] dark:bg-[#FFFFFF] dark:hover:bg-[#E5E5E5] text-[#FFFFFF] dark:text-[#000000] rounded-lg font-bold text-xs transition-colors cursor-pointer"
+            className="min-h-[44px] px-6 py-2 bg-[#000000] hover:bg-[#222222] text-[#FFFFFF] rounded-lg font-semibold text-[13px] sm:text-[14px] transition-colors cursor-pointer"
           >
             Close Dossier
           </button>
