@@ -207,12 +207,12 @@ export function DataTable<T>({
       </div>
 
       {/* Pagination Footer */}
-      <div className="bg-[#FAFAFA] px-4 py-3 border-t border-[#D6D6D6] flex flex-col sm:flex-row items-center justify-between gap-3 text-[13px] sm:text-[14px] text-[#111111]">
+      <div className="bg-[#FAFAFA] px-4 py-3 border-t border-[#D6D6D6] flex flex-col lg:flex-row items-center justify-between gap-3 text-[13px] sm:text-[14px] text-[#111111]">
         <div className="flex flex-wrap items-center gap-3">
           <div>
-            Showing <span className="font-semibold text-[#000000] tabular-nums">{totalRecords === 0 ? 0 : startIndex + 1}</span> to{' '}
-            <span className="font-semibold text-[#000000] tabular-nums">{Math.min(startIndex + currentLimit, totalRecords)}</span> of{' '}
-            <span className="font-semibold text-[#000000] tabular-nums">{totalRecords}</span> records
+            Showing <span className="font-bold text-[#000000] tabular-nums">{totalRecords === 0 ? 0 : startIndex + 1}</span>–
+            <span className="font-bold text-[#000000] tabular-nums">{Math.min(startIndex + currentLimit, totalRecords)}</span> of{' '}
+            <span className="font-extrabold text-[#000000] tabular-nums">{totalRecords.toLocaleString('en-IN')}</span> cases
           </div>
 
           {isServer && serverPagination?.onLimitChange && (
@@ -221,55 +221,104 @@ export function DataTable<T>({
               <select
                 value={serverPagination.limit}
                 onChange={(e) => serverPagination.onLimitChange!(parseInt(e.target.value, 10))}
-                className="min-h-[36px] px-2.5 py-1 text-xs bg-[#FFFFFF] border border-[#D6D6D6] rounded-lg font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#FACC15]"
+                className="min-h-[38px] px-2.5 py-1 text-xs bg-[#FFFFFF] border border-[#D6D6D6] rounded-xl font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#FACC15] cursor-pointer"
               >
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
+                <option value={20}>20 per page</option>
+                <option value={50}>50 per page</option>
+                <option value={100}>100 per page</option>
               </select>
             </div>
           )}
         </div>
 
-        <div className="flex items-center gap-1.5">
+        {/* Numbered Server Pagination Controls */}
+        <div className="flex items-center flex-wrap gap-1.5 justify-center">
           <button
             onClick={() => handlePageChange(1)}
             disabled={currentPage === 1}
-            className="min-h-[40px] min-w-[40px] sm:min-h-[36px] sm:min-w-[36px] flex items-center justify-center p-2 rounded-lg bg-[#FFFFFF] border border-[#D6D6D6] text-[#111111] hover:bg-[#F2F2F2] disabled:opacity-40 disabled:hover:bg-[#FFFFFF] transition-colors cursor-pointer"
-            title="First Page"
+            className="min-h-[40px] min-w-[40px] px-2.5 py-2 flex items-center justify-center rounded-xl bg-[#FFFFFF] border border-[#D6D6D6] text-[#111111] hover:bg-[#F2F2F2] disabled:opacity-30 disabled:hover:bg-[#FFFFFF] font-bold text-xs transition-colors cursor-pointer"
+            title="First Page (1)"
             aria-label="First Page"
           >
-            <ChevronsLeft className="w-4 h-4" />
+            <ChevronsLeft className="w-4 h-4 mr-0.5" />
+            <span className="hidden sm:inline">First</span>
           </button>
+          
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className="min-h-[40px] min-w-[40px] sm:min-h-[36px] sm:min-w-[36px] flex items-center justify-center p-2 rounded-lg bg-[#FFFFFF] border border-[#D6D6D6] text-[#111111] hover:bg-[#F2F2F2] disabled:opacity-40 disabled:hover:bg-[#FFFFFF] transition-colors cursor-pointer"
+            className="min-h-[40px] px-3 py-2 flex items-center justify-center rounded-xl bg-[#FFFFFF] border border-[#D6D6D6] text-[#111111] hover:bg-[#F2F2F2] disabled:opacity-30 disabled:hover:bg-[#FFFFFF] font-bold text-xs transition-colors cursor-pointer"
             title="Previous Page"
             aria-label="Previous Page"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-4 h-4 mr-0.5" />
+            <span>Previous</span>
           </button>
-          <span className="px-3.5 py-2 sm:py-1 bg-[#FFFFFF] border border-[#D6D6D6] rounded-lg font-semibold text-[#000000] text-xs sm:text-sm tabular-nums">
-            Page {currentPage} of {totalPages}
-          </span>
+
+          {/* Numbered Page Buttons with Ellipses */}
+          <div className="flex items-center gap-1">
+            {(() => {
+              const items: (number | string)[] = [];
+              if (totalPages <= 7) {
+                for (let i = 1; i <= totalPages; i++) items.push(i);
+              } else if (currentPage <= 4) {
+                items.push(1, 2, 3, 4, 5, '...', totalPages);
+              } else if (currentPage >= totalPages - 3) {
+                items.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+              } else {
+                items.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+              }
+
+              return items.map((item, idx) => {
+                if (item === '...') {
+                  return (
+                    <span key={`ellipsis-${idx}`} className="px-1.5 text-[#666666] font-bold text-xs select-none">
+                      ...
+                    </span>
+                  );
+                }
+
+                const pageNumber = item as number;
+                const isActive = pageNumber === currentPage;
+
+                return (
+                  <button
+                    key={pageNumber}
+                    onClick={() => handlePageChange(pageNumber)}
+                    className={`min-h-[40px] min-w-[40px] px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer tabular-nums ${
+                      isActive
+                        ? 'bg-[#FACC15] text-[#000000] border-2 border-[#EAB308] font-black shadow-xs'
+                        : 'bg-[#FFFFFF] text-[#111111] border border-[#D6D6D6] hover:bg-[#F2F2F2]'
+                    }`}
+                    aria-current={isActive ? 'page' : undefined}
+                  >
+                    {pageNumber}
+                  </button>
+                );
+              });
+            })()}
+          </div>
+
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="min-h-[40px] min-w-[40px] sm:min-h-[36px] sm:min-w-[36px] flex items-center justify-center p-2 rounded-lg bg-[#FFFFFF] border border-[#D6D6D6] text-[#111111] hover:bg-[#F2F2F2] disabled:opacity-40 disabled:hover:bg-[#FFFFFF] transition-colors cursor-pointer"
+            className="min-h-[40px] px-3 py-2 flex items-center justify-center rounded-xl bg-[#FFFFFF] border border-[#D6D6D6] text-[#111111] hover:bg-[#F2F2F2] disabled:opacity-30 disabled:hover:bg-[#FFFFFF] font-bold text-xs transition-colors cursor-pointer"
             title="Next Page"
             aria-label="Next Page"
           >
-            <ChevronRight className="w-4 h-4" />
+            <span>Next</span>
+            <ChevronRight className="w-4 h-4 ml-0.5" />
           </button>
+
           <button
             onClick={() => handlePageChange(totalPages)}
             disabled={currentPage === totalPages}
-            className="min-h-[40px] min-w-[40px] sm:min-h-[36px] sm:min-w-[36px] flex items-center justify-center p-2 rounded-lg bg-[#FFFFFF] border border-[#D6D6D6] text-[#111111] hover:bg-[#F2F2F2] disabled:opacity-40 disabled:hover:bg-[#FFFFFF] transition-colors cursor-pointer"
-            title="Last Page"
+            className="min-h-[40px] min-w-[40px] px-2.5 py-2 flex items-center justify-center rounded-xl bg-[#FFFFFF] border border-[#D6D6D6] text-[#111111] hover:bg-[#F2F2F2] disabled:opacity-30 disabled:hover:bg-[#FFFFFF] font-bold text-xs transition-colors cursor-pointer"
+            title={`Last Page (${totalPages})`}
             aria-label="Last Page"
           >
-            <ChevronsRight className="w-4 h-4" />
+            <span className="hidden sm:inline">Last</span>
+            <ChevronsRight className="w-4 h-4 ml-0.5" />
           </button>
         </div>
       </div>

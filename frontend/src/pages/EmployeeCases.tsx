@@ -6,11 +6,16 @@ import { StatusBadge } from '../components/StatusBadge';
 import { PriorityBadge } from '../components/PriorityBadge';
 import { Modal } from '../components/Modal';
 import { CaseDetailsModal } from '../components/CaseDetailsModal';
-import { Search, Eye, PhoneCall, CreditCard } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { TALUKA_OPTIONS } from '../utils/taluka';
+import { Search, Eye, PhoneCall, CreditCard, RotateCcw, UserCheck, Layers } from 'lucide-react';
 
 export const EmployeeCases: React.FC = () => {
+  const { user } = useAuth();
   const [cases, setCases] = useState<RecoveryCase[]>([]);
+  const [scope, setScope] = useState<'mine' | 'all'>('mine');
   const [search, setSearch] = useState('');
+  const [talukaFilter, setTalukaFilter] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -35,13 +40,14 @@ export const EmployeeCases: React.FC = () => {
 
   useEffect(() => {
     fetchMyCases();
-  }, [search, page, limit]);
+  }, [search, talukaFilter, scope, page, limit]);
 
   const fetchMyCases = async () => {
     setIsLoading(true);
     try {
-      const params: any = { page, limit };
+      const params: any = { page, limit, scope };
       if (search) params.search = search;
+      if (talukaFilter) params.taluka = talukaFilter;
       const res = await api.get('/recovery-cases', { params });
       setCases(res.data.cases || []);
       if (res.data.pagination) {
@@ -147,6 +153,18 @@ export const EmployeeCases: React.FC = () => {
       ),
     },
     {
+      header: 'Taluka',
+      accessor: (row) => (
+        row.taluka ? (
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-[#FEF9C3] text-[#111111] border border-[#EAB308]">
+            {row.taluka}
+          </span>
+        ) : (
+          <span className="text-xs text-[#666666]">—</span>
+        )
+      ),
+    },
+    {
       header: 'Total Due',
       accessor: (row) => (
         <div className="border-l-2 border-[#FACC15] pl-2 py-0.5 inline-block">
@@ -163,6 +181,28 @@ export const EmployeeCases: React.FC = () => {
     {
       header: 'Status',
       accessor: (row) => <StatusBadge status={row.status} />,
+    },
+    {
+      header: 'Assignment',
+      accessor: (row) => {
+        const isMine = user && row.assigned_employee_id === user.id;
+        if (isMine) {
+          return (
+            <span className="inline-flex items-center gap-1 font-black text-xs text-[#000000] bg-[#FEF9C3] px-2.5 py-1 rounded-md border border-[#EAB308] shadow-2xs">
+              <UserCheck className="w-3.5 h-3.5 text-[#854D0E]" />
+              <span>Assigned to You</span>
+            </span>
+          );
+        }
+        if (row.assigned_employee_name) {
+          return (
+            <span className="font-semibold text-xs text-[#374151]">
+              {row.assigned_employee_name}
+            </span>
+          );
+        }
+        return <span className="text-xs text-[#9CA3AF] italic">Unassigned</span>;
+      },
     },
     {
       header: 'Actions',
@@ -196,24 +236,116 @@ export const EmployeeCases: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Scope Navigation Tabs */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-[#E5E7EB] pb-3">
+        <button
+          type="button"
+          onClick={() => {
+            setScope('mine');
+            setPage(1);
+          }}
+          className={`min-h-[42px] px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer ${
+            scope === 'mine'
+              ? 'bg-[#111111] text-[#FFFFFF] shadow-sm'
+              : 'bg-[#FFFFFF] text-[#4B5563] hover:bg-[#F3F4F6] border border-[#E5E7EB]'
+          }`}
+        >
+          <UserCheck className={`w-4 h-4 ${scope === 'mine' ? 'text-[#FACC15]' : 'text-[#6B7280]'}`} />
+          <span>Assigned To Me</span>
+          {scope === 'mine' && (
+            <span className="ml-1 px-2 py-0.5 rounded-md bg-[#FACC15] text-[#000000] text-[11px] font-black">
+              {total.toLocaleString('en-IN')}
+            </span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setScope('all');
+            setPage(1);
+          }}
+          className={`min-h-[42px] px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer ${
+            scope === 'all'
+              ? 'bg-[#111111] text-[#FFFFFF] shadow-sm'
+              : 'bg-[#FFFFFF] text-[#4B5563] hover:bg-[#F3F4F6] border border-[#E5E7EB]'
+          }`}
+        >
+          <Layers className={`w-4 h-4 ${scope === 'all' ? 'text-[#60A5FA]' : 'text-[#6B7280]'}`} />
+          <span>All Recovery Pool</span>
+          {scope === 'all' && (
+            <span className="ml-1 px-2 py-0.5 rounded-md bg-[#3B82F6] text-[#FFFFFF] text-[11px] font-black">
+              {total.toLocaleString('en-IN')}
+            </span>
+          )}
+        </button>
+      </div>
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[#111111] tracking-tight">My Assigned Recovery Cases</h1>
-          <p className="text-xs text-[#666666] font-medium mt-1">Field officer workspace for customer follow-ups & collections.</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-black text-[#111111] tracking-tight">
+              {scope === 'mine' ? 'My Assigned Recovery Cases' : 'All Recovery Pool Cases'}
+            </h1>
+            <span className="px-3 py-1 rounded-xl bg-[#FEF9C3] text-[#000000] border border-[#EAB308] font-bold text-xs shadow-xs tabular-nums">
+              {total.toLocaleString('en-IN')} {(search || talukaFilter) ? 'Cases Found' : 'Total Cases'}
+            </span>
+          </div>
+          <p className="text-xs text-[#666666] font-medium mt-1">
+            {scope === 'mine' 
+              ? 'Field officer workspace for your delegated borrower follow-ups & collections.' 
+              : 'Complete repository of agency vehicle recovery accounts.'}
+          </p>
         </div>
 
-        <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-[#666666]" />
-          <input
-            type="text"
-            placeholder="Search Proposal No, Borrower, Reg..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className="min-h-[44px] w-full pl-10 pr-3.5 py-2.5 text-xs bg-[#FFFFFF] border border-[#D1D1D1] rounded-xl text-[#111111] placeholder:text-[#666666] focus:ring-2 focus:ring-[#FACC15]"
-          />
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <div className="relative flex-1 sm:w-64">
+            <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-[#666666]" />
+            <input
+              type="text"
+              placeholder="Search Proposal No, Borrower, Reg..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="min-h-[44px] w-full pl-10 pr-3.5 py-2.5 text-xs bg-[#FFFFFF] border border-[#D1D1D1] rounded-xl text-[#111111] placeholder:text-[#666666] focus:ring-2 focus:ring-[#FACC15]"
+            />
+          </div>
+
+          <div className="w-full sm:w-48">
+            <select
+              value={talukaFilter}
+              onChange={(e) => {
+                setTalukaFilter(e.target.value);
+                setPage(1);
+              }}
+              className="min-h-[44px] w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#D1D1D1] rounded-xl text-[#111111] font-bold focus:ring-2 focus:ring-[#FACC15]"
+              title="Taluka"
+            >
+              {TALUKA_OPTIONS.map((opt) => (
+                <option key={opt} value={opt === 'All Talukas' ? '' : opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {(search || talukaFilter) && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch('');
+                setTalukaFilter('');
+                setPage(1);
+              }}
+              className="min-h-[44px] px-3 py-2 rounded-xl border border-[#D1D1D1] bg-[#FFFFFF] text-xs font-bold text-[#111111] hover:bg-[#F2F2F2] flex items-center gap-1 cursor-pointer"
+              title="Reset Filters"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -222,7 +354,11 @@ export const EmployeeCases: React.FC = () => {
         data={cases}
         keyExtractor={(item) => item.id}
         isLoading={isLoading}
-        emptyMessage="No recovery cases currently assigned to you."
+        emptyMessage={
+          scope === 'mine'
+            ? "No recovery cases currently assigned to you. Cases delegated to your account by management will appear here."
+            : "No recovery cases found."
+        }
         serverPagination={{
           total,
           page,
@@ -272,6 +408,14 @@ export const EmployeeCases: React.FC = () => {
                     {vehicleDesc}
                   </span>
                 </div>
+                {item.taluka && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#666666] font-medium">Taluka:</span>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-[#FEF9C3] text-[#111111] border border-[#EAB308]">
+                      {item.taluka}
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between pt-1 border-t border-[#E8E8E8] font-mono">
                   <span className="text-[#666666] font-bold">Total Due:</span>
                   <span className="border-l-2 border-[#FACC15] pl-2 text-base font-black text-[#000000]">

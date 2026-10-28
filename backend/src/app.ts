@@ -13,12 +13,27 @@ import paymentsRoutes from './routes/paymentsRoutes';
 import excelRoutes from './routes/excelRoutes';
 import reportsRoutes from './routes/reportsRoutes';
 
+import path from 'path';
+import fs from 'fs';
+
 dotenv.config();
 
 const app: Application = express();
 
+const rawCors = process.env.CORS_ORIGIN || 'http://localhost:5173';
+const allowedOrigins = rawCors.split(',').map((s) => s.trim());
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (rawCors === '*' || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
   credentials: true,
 }));
 
@@ -50,5 +65,17 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     message: err.message || 'An internal server error occurred.',
   });
 });
+
+// Production Static Frontend Serving (when frontend/dist exists)
+const frontendDist = path.resolve(__dirname, '../../frontend/dist');
+if (fs.existsSync(frontendDist)) {
+  app.use(express.static(frontendDist));
+  app.get('*', (req: Request, res: Response, next: NextFunction) => {
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+    res.sendFile(path.join(frontendDist, 'index.html'));
+  });
+}
 
 export default app;

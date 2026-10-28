@@ -1,8 +1,10 @@
 import { Response } from 'express';
 import { query } from '../config/db';
 import { AuthenticatedRequest } from '../middleware/auth';
+import { normalizeTaluka } from '../utils/taluka';
 import * as xlsx from 'xlsx';
 import path from 'path';
+import fs from 'fs';
 
 // Target Excel Column Dictionary Mapping
 const COLUMN_MAPPINGS: Record<string, string[]> = {
@@ -29,6 +31,9 @@ const COLUMN_MAPPINGS: Record<string, string[]> = {
   ],
   city: [
     'city', 'location', 'town', 'district', 'branch', 'area', 'zone', 'place'
+  ],
+  taluka: [
+    'taluka', 'taluk', 'tahsil', 'tehsil', 'taluka name', 'taluka_name', 'sub_district', 'sub district', 'subdistrict'
   ],
   state: [
     'state', 'province', 'region'
@@ -125,18 +130,174 @@ function parseNumeric(val: any): number {
   return isNaN(parsed) ? 0 : parsed;
 }
 
+export async function parseExcelDataFromFile(filePath: string) {
+  const workbook = xlsx.readFile(filePath);
+  const sheetName = workbook.SheetNames[0];
+  const sheet = workbook.Sheets[sheetName];
+  const rawRows: any[] = xlsx.utils.sheet_to_json(sheet, { defval: '' });
+
+  if (rawRows.length === 0) {
+    return {
+      rawRows: [],
+      parsedRows: [],
+      validationErrors: [],
+      validCount: 0,
+      failedCount: 0,
+      duplicateCount: 0,
+      unmappedColumns: [],
+      detectedHeaders: [],
+    };
+  }
+
+  const firstRow = rawRows[0];
+  const detectedHeaders = Object.keys(firstRow);
+  const mappedHeaderMap: Record<string, string> = {};
+  const unmappedColumns: string[] = [];
+
+  detectedHeaders.forEach((h) => {
+    const mappedKey = findMappedKey(h);
+    if (mappedKey) {
+      mappedHeaderMap[h] = mappedKey;
+    } else {
+      unmappedColumns.push(h);
+    }
+  });
+
+  const parsedRows: any[] = [];
+  const validationErrors: any[] = [];
+  const seenProposalsInFile = new Set<string>();
+
+  let validCount = 0;
+  let failedCount = 0;
+  let duplicateCount = 0;
+
+  const dbProposalsRes = await query('SELECT UPPER(loan_account_number) as proposal FROM loans');
+  const existingDbProposals = new Set(
+    dbProposalsRes.rows.map((r: any) => String(r.proposal).toUpperCase().trim())
+  );
+
+  rawRows.forEach((row, index) => {
+    const rowNum = index + 2;
+    const mappedRow: any = {};
+    
+    Object.keys(row).forEach((h) => {
+      const targetKey = mappedHeaderMap[h];
+      if (targetKey) {
+        mappedRow[targetKey] = row[h];
+      }
+    });
+
+    const rawProposal = mappedRow.loan_account_number || row['Proposal No'] || row['Proposal No.'] || row['Proposal'] || row['Loan Account Number'] || row['DUE_AGMTNO'] || row['due_agmtno'] || row['AGMTNO'];
+    const rawCustomerName = mappedRow.customer_name || row['Customer Name'] || row['Borrower Name'] || row['Name'] || row['CUSTOMERNAME'];
+    const rawPhone = mappedRow.phone || row['MO NO'] || row['Mobile No'] || row['Phone'] || row['Mobile no'] || row['MOBILE NO'];
+    const rawRegNo = mappedRow.vehicle_number || row['Registration Number'] || row['Reg No'] || row['REG_NUMBER'] || row['Reg Number'];
+    const rawPos = mappedRow.outstanding_amount || row['POS'] || row['Outstanding Amount'];
+    const rawEmi = mappedRow.emi_amount || row['EMI Amount'] || row['EMI'];
+    const rawTotalDue = mappedRow.total_overdue || row['Total Due'] || row['OVERDUE'] || row['Overdue'];
+    const rawAddress = mappedRow.address || row['Residence Address'] || row['Address'];
+    const rawEngine = mappedRow.engine_number || row['Engine No'] || row['Engine Number'] || row['ENG_NO'];
+    const rawChassis = mappedRow.chassis_number || row['Chassis No'] || row['Chassis Number'] || row['CHASSIS_NO'];
+    const rawAssetDesc = mappedRow.vehicle_model || row['Asset Desc'] || row['Asset Description'] || row['MODEL'];
+    const rawBomBucket = mappedRow.dpd || row['BOM Bucket'] || row['Bucket_Slab'];
+    const rawPaidStatus = mappedRow.recovery_status || row['PAID/UNPAID'];
+    const rawTaluka = mappedRow.taluka || row['Taluka'] || row['taluka'] || row['Tehsil'] || row['Tahsil'] || row['TALUKA'];
+
+    const proposalNo = String(rawProposal || '').trim().toUpperCase();
+    const customerName = String(rawCustomerName || '').trim();
+    const phoneStr = String(rawPhone || '').trim();
+    const regNo = String(rawRegNo || '').trim().toUpperCase();
+
+    let hasError = false;
+
+    if (!proposalNo) {
+      hasError = true;
+      validationErrors.push({
+        row_number: rowNum,
+        field: 'Proposal No',
+        original_value: rawProposal || 'N/A',
+        error_type: 'MISSING_REQUIRED',
+        error_message: 'Missing required Loan Account Number / Proposal No.',
+      });
+    }
+
+    if (!customerName) {
+      hasError = true;
+      validationErrors.push({
+        row_number: rowNum,
+        field: 'Customer Name',
+        loan_account_number: proposalNo || 'N/A',
+        original_value: rawCustomerName || 'N/A',
+        error_type: 'MISSING_REQUIRED',
+        error_message: 'Missing required Customer / Borrower Name.',
+      });
+    }
+
+    if (hasError) {
+      failedCount++;
+      return;
+    }
+
+    let isFileDuplicate = false;
+    if (seenProposalsInFile.has(proposalNo)) {
+      isFileDuplicate = true;
+      duplicateCount++;
+    } else {
+      seenProposalsInFile.add(proposalNo);
+    }
+
+    const isDbDuplicate = existingDbProposals.has(proposalNo);
+    if (isDbDuplicate && !isFileDuplicate) {
+      duplicateCount++;
+    }
+
+    validCount++;
+
+    const pos = parseNumeric(rawPos);
+    const emi = parseNumeric(rawEmi);
+    const totalDue = parseNumeric(rawTotalDue);
+    const dpd = parseBomBucketToDpd(rawBomBucket);
+    const caseStatus = parsePaidUnpaidStatus(rawPaidStatus);
+    const normalizedTaluka = normalizeTaluka(rawTaluka);
+
+    parsedRows.push({
+      row_number: rowNum,
+      loan_account_number: proposalNo,
+      customer_name: customerName,
+      phone: phoneStr || 'N/A',
+      address: rawAddress ? String(rawAddress).trim() : 'Address Not Provided',
+      city: mappedRow.city || row['City'] || row['Location'] || 'Nashik',
+      state: mappedRow.state || row['State'] || 'Maharashtra',
+      taluka: normalizedTaluka,
+      vehicle_number: regNo || `REG-${proposalNo}`,
+      vehicle_model: rawAssetDesc ? String(rawAssetDesc).trim() : 'Commercial Vehicle',
+      engine_number: rawEngine ? String(rawEngine).trim() : null,
+      chassis_number: rawChassis ? String(rawChassis).trim() : null,
+      outstanding_amount: pos,
+      emi_amount: emi,
+      total_overdue: totalDue || pos,
+      dpd,
+      bom_bucket: rawBomBucket ? String(rawBomBucket).trim() : `BOM ${Math.ceil(dpd / 30)}`,
+      recovery_status: caseStatus,
+      assigned_employee: mappedRow.assigned_employee || '',
+      is_duplicate: isDbDuplicate || isFileDuplicate,
+      raw_excel_data: row,
+    });
+  });
+
+  return {
+    rawRows,
+    parsedRows,
+    validationErrors,
+    validCount,
+    failedCount,
+    duplicateCount,
+    unmappedColumns,
+    detectedHeaders,
+  };
+}
+
 export async function uploadExcel(req: AuthenticatedRequest, res: Response) {
   try {
-    // STAGE 1: FILE UPLOAD VERIFICATION & DEBUG LOGGING
-    console.log("Content-Type:", req.headers["content-type"]);
-    console.log("req.file:", req.file ? {
-        fieldname: req.file.fieldname,
-        originalname: req.file.originalname,
-        mimetype: req.file.mimetype,
-        size: req.file.size
-    } : null);
-    console.log("req.files:", (req as any).files);
-
     if (!req.file) {
       return res.status(400).json({ 
         message: 'STAGE 1 FILE UPLOAD ERROR: No file received under field name "file". Check field name and multipart boundary.' 
@@ -147,156 +308,28 @@ export async function uploadExcel(req: AuthenticatedRequest, res: Response) {
     const filePath = req.file.path;
     const originalName = req.file.originalname;
 
-    // STAGE 2: EXCEL PARSING & VALIDATION
-    let workbook: xlsx.WorkBook;
+    let parsedResult;
     try {
-      workbook = xlsx.readFile(filePath);
+      parsedResult = await parseExcelDataFromFile(filePath);
     } catch (parseErr: any) {
       console.error('[STAGE 2 EXCEL PARSING ERROR]:', parseErr);
       return res.status(400).json({ message: `STAGE 2 EXCEL PARSING ERROR: Failed to read .xlsx file structure (${parseErr.message})` });
     }
 
-    const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
-
-    const rawRows: any[] = xlsx.utils.sheet_to_json(sheet, { defval: '' });
+    const {
+      rawRows,
+      parsedRows,
+      validationErrors,
+      validCount,
+      failedCount,
+      duplicateCount,
+      unmappedColumns,
+      detectedHeaders,
+    } = parsedResult;
 
     if (rawRows.length === 0) {
       return res.status(400).json({ message: 'STAGE 2 EXCEL PARSING ERROR: Uploaded Excel file contains no data rows.' });
     }
-
-    const firstRow = rawRows[0];
-    const detectedHeaders = Object.keys(firstRow);
-
-    const mappedHeaderMap: Record<string, string> = {};
-    const unmappedColumns: string[] = [];
-
-    detectedHeaders.forEach((h) => {
-      const mappedKey = findMappedKey(h);
-      if (mappedKey) {
-        mappedHeaderMap[h] = mappedKey;
-      } else {
-        unmappedColumns.push(h);
-      }
-    });
-
-    const parsedRows: any[] = [];
-    const validationErrors: any[] = [];
-    const seenProposalsInFile = new Set<string>();
-
-    let validCount = 0;
-    let failedCount = 0;
-    let duplicateCount = 0;
-
-    const dbProposalsRes = await query('SELECT loan_account_number FROM loans');
-    const existingDbProposals = new Set(
-      dbProposalsRes.rows.map((r: any) => String(r.loan_account_number).toUpperCase().trim())
-    );
-
-    rawRows.forEach((row, index) => {
-      const rowNum = index + 2;
-      const mappedRow: any = {};
-      
-      Object.keys(row).forEach((h) => {
-        const targetKey = mappedHeaderMap[h];
-        if (targetKey) {
-          mappedRow[targetKey] = row[h];
-        }
-      });
-
-      const rawProposal = mappedRow.loan_account_number || row['Proposal No'] || row['Proposal No.'] || row['Proposal'] || row['Loan Account Number'] || row['DUE_AGMTNO'] || row['due_agmtno'] || row['AGMTNO'];
-      const rawCustomerName = mappedRow.customer_name || row['Customer Name'] || row['Borrower Name'] || row['Name'] || row['CUSTOMERNAME'];
-      const rawPhone = mappedRow.phone || row['MO NO'] || row['Mobile No'] || row['Phone'] || row['Mobile no'] || row['MOBILE NO'];
-      const rawRegNo = mappedRow.vehicle_number || row['Registration Number'] || row['Reg No'] || row['REG_NUMBER'] || row['Reg Number'];
-      const rawPos = mappedRow.outstanding_amount || row['POS'] || row['Outstanding Amount'];
-      const rawEmi = mappedRow.emi_amount || row['EMI Amount'] || row['EMI'];
-      const rawTotalDue = mappedRow.total_overdue || row['Total Due'] || row['OVERDUE'] || row['Overdue'];
-      const rawAddress = mappedRow.address || row['Residence Address'] || row['Address'];
-      const rawEngine = mappedRow.engine_number || row['Engine No'] || row['Engine Number'] || row['ENG_NO'];
-      const rawChassis = mappedRow.chassis_number || row['Chassis No'] || row['Chassis Number'] || row['CHASSIS_NO'];
-      const rawAssetDesc = mappedRow.vehicle_model || row['Asset Desc'] || row['Asset Description'] || row['MODEL'];
-      const rawBomBucket = mappedRow.dpd || row['BOM Bucket'] || row['Bucket_Slab'];
-      const rawPaidStatus = mappedRow.recovery_status || row['PAID/UNPAID'];
-
-      const proposalNo = String(rawProposal || '').trim().toUpperCase();
-      const customerName = String(rawCustomerName || '').trim();
-      const phoneStr = String(rawPhone || '').trim();
-      const regNo = String(rawRegNo || '').trim().toUpperCase();
-
-      let hasError = false;
-
-      if (!proposalNo) {
-        hasError = true;
-        validationErrors.push({
-          row_number: rowNum,
-          field: 'Proposal No',
-          original_value: rawProposal || 'N/A',
-          error_type: 'MISSING_REQUIRED',
-          error_message: 'Missing required Loan Account Number / Proposal No.',
-        });
-      }
-
-      if (!customerName) {
-        hasError = true;
-        validationErrors.push({
-          row_number: rowNum,
-          field: 'Customer Name',
-          loan_account_number: proposalNo || 'N/A',
-          original_value: rawCustomerName || 'N/A',
-          error_type: 'MISSING_REQUIRED',
-          error_message: 'Missing required Customer / Borrower Name.',
-        });
-      }
-
-      if (hasError) {
-        failedCount++;
-        return;
-      }
-
-      let isFileDuplicate = false;
-      if (seenProposalsInFile.has(proposalNo)) {
-        isFileDuplicate = true;
-        duplicateCount++;
-      } else {
-        seenProposalsInFile.add(proposalNo);
-      }
-
-      const isDbDuplicate = existingDbProposals.has(proposalNo);
-      if (isDbDuplicate && !isFileDuplicate) {
-        duplicateCount++;
-      }
-
-      validCount++;
-
-      const pos = parseNumeric(rawPos);
-      const emi = parseNumeric(rawEmi);
-      const totalDue = parseNumeric(rawTotalDue);
-      const dpd = parseBomBucketToDpd(rawBomBucket);
-      const caseStatus = parsePaidUnpaidStatus(rawPaidStatus);
-
-      parsedRows.push({
-        row_number: rowNum,
-        loan_account_number: proposalNo,
-        customer_name: customerName,
-        phone: phoneStr || 'N/A',
-        address: rawAddress ? String(rawAddress).trim() : 'Address Not Provided',
-        city: mappedRow.city || row['City'] || row['Location'] || 'Nashik',
-        state: mappedRow.state || row['State'] || 'Maharashtra',
-        vehicle_number: regNo || `REG-${proposalNo}`,
-        vehicle_model: rawAssetDesc ? String(rawAssetDesc).trim() : 'Commercial Vehicle',
-        engine_number: rawEngine ? String(rawEngine).trim() : null,
-        chassis_number: rawChassis ? String(rawChassis).trim() : null,
-        outstanding_amount: pos,
-        emi_amount: emi,
-        total_overdue: totalDue || pos,
-        dpd,
-        bom_bucket: rawBomBucket ? String(rawBomBucket).trim() : `BOM ${Math.ceil(dpd / 30)}`,
-        recovery_status: caseStatus,
-        assigned_employee: mappedRow.assigned_employee || '',
-        is_duplicate: isDbDuplicate || isFileDuplicate,
-        raw_excel_data: row,
-      });
-    });
 
     // Save Upload Log
     const uploadRecordRes = await query(
@@ -327,7 +360,8 @@ export async function uploadExcel(req: AuthenticatedRequest, res: Response) {
       duplicate_rows: duplicateCount,
       unmapped_columns: unmappedColumns,
       detected_headers: detectedHeaders,
-      preview_rows: parsedRows,
+      preview_rows: parsedRows.slice(0, 50),
+      total_preview_count: parsedRows.length,
       errors: validationErrors,
     });
   } catch (error: any) {
@@ -341,164 +375,218 @@ export async function importExcel(req: AuthenticatedRequest, res: Response) {
     const { upload_id, rows } = req.body;
     const userId = req.user!.id;
 
-    if (!rows || !Array.isArray(rows) || rows.length === 0) {
-      return res.status(400).json({ message: 'No valid rows provided for import.' });
+    let rowsToImport: any[] = [];
+
+    // Prioritize loading all parsed rows directly from the uploaded file on disk via upload_id
+    if (upload_id) {
+      const uploadRes = await query('SELECT * FROM excel_uploads WHERE id = $1', [upload_id]);
+      if (uploadRes.rows.length > 0) {
+        const uploadRec = uploadRes.rows[0];
+        const uploadDir = (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME)
+          ? path.join('/tmp', 'uploads')
+          : path.join(__dirname, '../../uploads');
+        const filePath = path.join(uploadDir, uploadRec.filename);
+        if (fs.existsSync(filePath)) {
+          const parsed = await parseExcelDataFromFile(filePath);
+          rowsToImport = parsed.parsedRows;
+        }
+      }
+    }
+
+    // Fallback to rows sent in request body if upload_id was not on disk
+    if (rowsToImport.length === 0 && Array.isArray(rows) && rows.length > 0) {
+      rowsToImport = rows;
+    }
+
+    if (rowsToImport.length === 0) {
+      return res.status(400).json({ message: 'No valid rows provided or found for import.' });
     }
 
     let importedCount = 0;
     let updatedCount = 0;
 
-    for (const r of rows) {
+    // High performance batch processing in chunks of 50 rows
+    const CHUNK_SIZE = 50;
+    for (let i = 0; i < rowsToImport.length; i += CHUNK_SIZE) {
+      const chunk = rowsToImport.slice(i, i + CHUNK_SIZE);
       try {
-        const rawJsonStr = JSON.stringify(r.raw_excel_data || r);
-        const proposalNo = String(r.loan_account_number).trim().toUpperCase();
-
-        // 1. Check if loan with this proposal number already exists
-        const loanRes = await query('SELECT l.id, l.customer_id, l.vehicle_id FROM loans l WHERE l.loan_account_number = $1', [proposalNo]);
-
-        let customerId: number;
-        let vehicleId: number;
-        let loanId: number;
-
-        if (loanRes.rows.length > 0) {
-          // --- UPDATE EXISTING RECORD ---
-          const existingLoan = loanRes.rows[0];
-          loanId = existingLoan.id;
-          customerId = existingLoan.customer_id;
-          vehicleId = existingLoan.vehicle_id;
-
-          // Update customer record bound to this loan
-          await query(
-            `UPDATE customers 
-             SET full_name = $1, phone = $2, address = $3, city = $4, state = $5, updated_at = CURRENT_TIMESTAMP 
-             WHERE id = $6`,
-            [r.customer_name, r.phone || 'N/A', r.address, r.city, r.state, customerId]
-          );
-
-          // Update vehicle record bound to this loan
-          if (vehicleId) {
-            await query(
-              `UPDATE vehicles 
-               SET registration_number = $1, model = $2, engine_number = $3, chassis_number = $4, location = $5, updated_at = CURRENT_TIMESTAMP 
-               WHERE id = $6`,
-              [r.vehicle_number, r.vehicle_model || 'Commercial Vehicle', r.engine_number || null, r.chassis_number || null, r.city, vehicleId]
-            );
+        // 1. Bulk Upsert Vehicles
+        const uniqueVehicles = new Map<string, any>();
+        chunk.forEach(r => {
+          const reg = String(r.vehicle_number || `REG-${r.loan_account_number}`).trim().toUpperCase();
+          if (!uniqueVehicles.has(reg)) {
+            uniqueVehicles.set(reg, {
+              reg,
+              model: r.vehicle_model || 'Commercial Vehicle',
+              engine: r.engine_number || null,
+              chassis: r.chassis_number || null,
+              city: r.city || 'Nashik',
+            });
           }
+        });
 
-          // Update loan record
-          await query(
-            `UPDATE loans 
-             SET outstanding_amount = $1, emi_amount = $2, total_overdue = $3, dpd = $4, imported_excel_data = $5, updated_at = CURRENT_TIMESTAMP 
-             WHERE id = $6`,
-            [r.outstanding_amount, r.emi_amount, r.total_overdue || r.outstanding_amount, r.dpd, rawJsonStr, loanId]
+        const vList = Array.from(uniqueVehicles.values());
+        const vParams: any[] = [];
+        const vValues = vList.map((v, vIdx) => {
+          const p = vIdx * 5;
+          vParams.push(v.reg, v.model, v.engine, v.chassis, v.city);
+          return `($${p + 1}, $${p + 2}, $${p + 3}, $${p + 4}, $${p + 5}, 'UNDER_RECOVERY')`;
+        }).join(', ');
+
+        const vSql = `
+          INSERT INTO vehicles (registration_number, model, engine_number, chassis_number, location, status)
+          VALUES ${vValues}
+          ON CONFLICT (registration_number) DO UPDATE
+          SET model = EXCLUDED.model, engine_number = EXCLUDED.engine_number, chassis_number = EXCLUDED.chassis_number, location = EXCLUDED.location, updated_at = CURRENT_TIMESTAMP
+          RETURNING id, UPPER(registration_number) as reg
+        `;
+        const vRes = await query(vSql, vParams);
+        const vehIdMap = new Map<string, number>();
+        vRes.rows.forEach((row: any) => vehIdMap.set(row.reg, row.id));
+
+        // 2. Bulk Insert Customers
+        const cParams: any[] = [];
+        const cValues = chunk.map((c, cIdx) => {
+          const p = cIdx * 6;
+          const custCode = `CUST-${Date.now().toString().slice(-6)}-${i + cIdx}`;
+          cParams.push(custCode, c.customer_name, c.phone || 'N/A', c.address || 'Address Not Provided', c.city || 'Nashik', c.state || 'Maharashtra');
+          return `($${p + 1}, $${p + 2}, $${p + 3}, $${p + 4}, $${p + 5}, $${p + 6})`;
+        }).join(', ');
+
+        const cSql = `
+          INSERT INTO customers (customer_id, full_name, phone, address, city, state)
+          VALUES ${cValues}
+          RETURNING id, customer_id
+        `;
+        const cRes = await query(cSql, cParams);
+        const custIds = cRes.rows.map((row: any) => row.id);
+
+        // 3. Bulk Upsert Loans
+        const lParams: any[] = [];
+        const lValues = chunk.map((r, rIdx) => {
+          const p = rIdx * 10;
+          const custId = custIds[rIdx];
+          const regKey = String(r.vehicle_number || `REG-${r.loan_account_number}`).trim().toUpperCase();
+          const vehId = vehIdMap.get(regKey) || null;
+          const rawJson = JSON.stringify(r.raw_excel_data || r);
+          lParams.push(
+            String(r.loan_account_number).trim().toUpperCase(),
+            custId,
+            vehId,
+            (r.outstanding_amount || 0) * 1.2 || 500000,
+            r.outstanding_amount || 0,
+            r.emi_amount || 0,
+            r.total_overdue || r.outstanding_amount || 0,
+            r.dpd || 0,
+            rawJson,
+            'RECOVERY'
           );
+          return `($${p + 1}, $${p + 2}, $${p + 3}, $${p + 4}, $${p + 5}, $${p + 6}, $${p + 7}, $${p + 8}, $${p + 9}, $${p + 10})`;
+        }).join(', ');
 
-          // Update recovery case
-          const priority = r.dpd > 90 ? 'CRITICAL' : r.dpd > 60 ? 'HIGH' : 'MEDIUM';
-          await query(
-            `UPDATE recovery_cases 
-             SET priority = $1, status = $2, location = $3, updated_at = CURRENT_TIMESTAMP 
-             WHERE loan_id = $4`,
-            [priority, r.recovery_status, r.city, loanId]
-          );
-
-          updatedCount++;
-        } else {
-          // --- INSERT NEW RECORD ---
-          // Check if customer already exists by phone
-          let customerId: number;
-          const phoneVal = r.phone || 'N/A';
-          const existingCust = phoneVal !== 'N/A' 
-            ? await query('SELECT id FROM customers WHERE phone = $1 LIMIT 1', [phoneVal])
-            : { rows: [] };
-
-          if (existingCust.rows.length > 0) {
-            customerId = existingCust.rows[0].id;
-            await query(
-              `UPDATE customers 
-               SET full_name = $1, address = $2, city = $3, state = $4, updated_at = CURRENT_TIMESTAMP 
-               WHERE id = $5`,
-              [r.customer_name, r.address, r.city, r.state, customerId]
-            );
+        const lSql = `
+          INSERT INTO loans (loan_account_number, customer_id, vehicle_id, loan_amount, outstanding_amount, emi_amount, total_overdue, dpd, imported_excel_data, status)
+          VALUES ${lValues}
+          ON CONFLICT (loan_account_number) DO UPDATE
+          SET customer_id = EXCLUDED.customer_id,
+              vehicle_id = EXCLUDED.vehicle_id,
+              outstanding_amount = EXCLUDED.outstanding_amount,
+              emi_amount = EXCLUDED.emi_amount,
+              total_overdue = EXCLUDED.total_overdue,
+              dpd = EXCLUDED.dpd,
+              imported_excel_data = EXCLUDED.imported_excel_data,
+              updated_at = CURRENT_TIMESTAMP
+          RETURNING id, UPPER(loan_account_number) as lan, (xmax = 0) as is_insert
+        `;
+        const lRes = await query(lSql, lParams);
+        const loanResMap = new Map<string, number>();
+        lRes.rows.forEach((row: any) => {
+          loanResMap.set(row.lan, row.id);
+          if (row.is_insert) {
+            importedCount++;
           } else {
+            updatedCount++;
+          }
+        });
+
+        // 4. Bulk Upsert Recovery Cases
+        const rcParams: any[] = [];
+        const rcValues = chunk.map((r, rIdx) => {
+          const p = rIdx * 5;
+          const propKey = String(r.loan_account_number).trim().toUpperCase();
+          const loanId = loanResMap.get(propKey);
+          const priority = (r.dpd || 0) > 90 ? 'CRITICAL' : (r.dpd || 0) > 60 ? 'HIGH' : 'MEDIUM';
+          const recStatus = r.recovery_status || 'Unpaid';
+          rcParams.push(loanId, priority, recStatus, r.city || 'Nashik', r.taluka || null);
+          return `($${p + 1}, $${p + 2}, $${p + 3}, $${p + 4}, $${p + 5})`;
+        }).join(', ');
+
+        const rcSql = `
+          INSERT INTO recovery_cases (loan_id, priority, status, location, taluka)
+          VALUES ${rcValues}
+          ON CONFLICT (loan_id) DO UPDATE
+          SET priority = EXCLUDED.priority,
+              status = EXCLUDED.status,
+              location = EXCLUDED.location,
+              taluka = COALESCE(EXCLUDED.taluka, recovery_cases.taluka),
+              updated_at = CURRENT_TIMESTAMP
+          RETURNING id, loan_id
+        `;
+        await query(rcSql, rcParams);
+      } catch (bulkErr) {
+        console.warn(`Bulk chunk error at index ${i}, falling back to row-by-row:`, bulkErr);
+        // Resilient row-by-row fallback
+        for (const r of chunk) {
+          try {
+            const propKey = String(r.loan_account_number).trim().toUpperCase();
+            const priority = (r.dpd || 0) > 90 ? 'CRITICAL' : (r.dpd || 0) > 60 ? 'HIGH' : 'MEDIUM';
+            const regKey = String(r.vehicle_number || `REG-${propKey}`).trim().toUpperCase();
+
+            // Vehicle
+            const vRes = await query(
+              `INSERT INTO vehicles (registration_number, model, engine_number, chassis_number, location, status)
+               VALUES ($1, $2, $3, $4, $5, 'UNDER_RECOVERY')
+               ON CONFLICT (registration_number) DO UPDATE
+               SET model = EXCLUDED.model, location = EXCLUDED.location, updated_at = CURRENT_TIMESTAMP
+               RETURNING id`,
+              [regKey, r.vehicle_model || 'Commercial Vehicle', r.engine_number || null, r.chassis_number || null, r.city || 'Nashik']
+            );
+            const vehId = vRes.rows[0]?.id;
+
+            // Customer
             const custCode = `CUST-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`;
-            const newCust = await query(
+            const cRes = await query(
               `INSERT INTO customers (customer_id, full_name, phone, address, city, state)
                VALUES ($1, $2, $3, $4, $5, $6)
                RETURNING id`,
-              [custCode, r.customer_name, phoneVal, r.address, r.city, r.state]
+              [custCode, r.customer_name, r.phone || 'N/A', r.address || 'Address Not Provided', r.city || 'Nashik', r.state || 'Maharashtra']
             );
-            customerId = newCust.rows.length > 0 ? newCust.rows[0].id : newCust.lastID!;
-          }
+            const custId = cRes.rows[0]?.id;
 
-          // Check if vehicle already exists in vehicles table
-          let vehicleId: number;
-          const regNo = r.vehicle_number || `REG-${proposalNo}`;
-          const existingVeh = await query('SELECT id FROM vehicles WHERE registration_number = $1', [regNo]);
-          if (existingVeh.rows.length > 0) {
-            vehicleId = existingVeh.rows[0].id;
+            // Loan
+            const lRes = await query(
+              `INSERT INTO loans (loan_account_number, customer_id, vehicle_id, loan_amount, outstanding_amount, emi_amount, total_overdue, dpd, imported_excel_data, status)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'RECOVERY')
+               ON CONFLICT (loan_account_number) DO UPDATE
+               SET customer_id = EXCLUDED.customer_id, vehicle_id = EXCLUDED.vehicle_id, outstanding_amount = EXCLUDED.outstanding_amount, emi_amount = EXCLUDED.emi_amount, total_overdue = EXCLUDED.total_overdue, dpd = EXCLUDED.dpd, updated_at = CURRENT_TIMESTAMP
+               RETURNING id, (xmax = 0) as is_insert`,
+              [propKey, custId, vehId, (r.outstanding_amount || 0) * 1.2 || 500000, r.outstanding_amount || 0, r.emi_amount || 0, r.total_overdue || r.outstanding_amount || 0, r.dpd || 0, JSON.stringify(r.raw_excel_data || r)]
+            );
+            const loanId = lRes.rows[0]?.id;
+            if (lRes.rows[0]?.is_insert) importedCount++; else updatedCount++;
+
+            // Recovery Case
             await query(
-              `UPDATE vehicles 
-               SET model = $1, engine_number = $2, chassis_number = $3, location = $4, status = 'UNDER_RECOVERY', updated_at = CURRENT_TIMESTAMP 
-               WHERE id = $5`,
-              [r.vehicle_model || 'Commercial Vehicle', r.engine_number || null, r.chassis_number || null, r.city, vehicleId]
+              `INSERT INTO recovery_cases (loan_id, priority, status, location, taluka)
+               VALUES ($1, $2, $3, $4, $5)
+               ON CONFLICT (loan_id) DO UPDATE
+               SET priority = EXCLUDED.priority, status = EXCLUDED.status, location = EXCLUDED.location, taluka = COALESCE(EXCLUDED.taluka, recovery_cases.taluka), updated_at = CURRENT_TIMESTAMP`,
+              [loanId, priority, r.recovery_status || 'Unpaid', r.city || 'Nashik', r.taluka || null]
             );
-          } else {
-            const newVeh = await query(
-              `INSERT INTO vehicles (registration_number, model, engine_number, chassis_number, location, status)
-               VALUES ($1, $2, $3, $4, $5, $6)
-               RETURNING id`,
-              [
-                regNo, 
-                r.vehicle_model || 'Commercial Vehicle', 
-                r.engine_number || null, 
-                r.chassis_number || null, 
-                r.city, 
-                'UNDER_RECOVERY'
-              ]
-            );
-            vehicleId = newVeh.rows.length > 0 ? newVeh.rows[0].id : newVeh.lastID!;
+          } catch (rErr) {
+            console.error('Row fallback error for', r.loan_account_number, rErr);
           }
-
-          // Insert loan record
-          const newLoan = await query(
-            `INSERT INTO loans (loan_account_number, customer_id, vehicle_id, loan_amount, outstanding_amount, emi_amount, total_overdue, dpd, imported_excel_data, status)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-             RETURNING id`,
-            [
-              proposalNo,
-              customerId,
-              vehicleId,
-              r.outstanding_amount * 1.2 || 500000,
-              r.outstanding_amount,
-              r.emi_amount,
-              r.total_overdue || r.outstanding_amount,
-              r.dpd,
-              rawJsonStr,
-              'RECOVERY',
-            ]
-          );
-          loanId = newLoan.rows.length > 0 ? newLoan.rows[0].id : newLoan.lastID!;
-
-          // Insert recovery case
-          let assignedEmpId: number | null = null;
-          if (r.assigned_employee) {
-            const empRes = await query('SELECT id FROM users WHERE email = $1 OR name LIKE $2', [r.assigned_employee, `%${r.assigned_employee}%`]);
-            if (empRes.rows.length > 0) assignedEmpId = empRes.rows[0].id;
-          }
-
-          const priority = r.dpd > 90 ? 'CRITICAL' : r.dpd > 60 ? 'HIGH' : 'MEDIUM';
-
-          await query(
-            `INSERT INTO recovery_cases (loan_id, assigned_employee_id, priority, status, location)
-             VALUES ($1, $2, $3, $4, $5)`,
-            [loanId, assignedEmpId, priority, r.recovery_status, r.city]
-          );
-
-          importedCount++;
         }
-      } catch (rowErr) {
-        console.error('Error importing single row:', r, rowErr);
       }
     }
 
@@ -518,8 +606,10 @@ export async function importExcel(req: AuthenticatedRequest, res: Response) {
 
     return res.json({
       message: 'Excel data imported successfully. Recovery records are now available in the system.',
+      total_rows: rowsToImport.length,
       imported_new_records: importedCount,
       updated_existing_records: updatedCount,
+      preview_rows: rowsToImport.slice(0, 20),
     });
   } catch (error: any) {
     console.error('importExcel error:', error);
@@ -620,7 +710,9 @@ export async function deleteExcelUpload(req: AuthenticatedRequest, res: Response
 
     // Remove physical file from storage if present
     if (uploadRecord.filename) {
-      const uploadDir = path.join(__dirname, '../../uploads');
+      const uploadDir = (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME)
+        ? path.join('/tmp', 'uploads')
+        : path.join(__dirname, '../../uploads');
       const filePath = path.join(uploadDir, uploadRecord.filename);
       const fs = require('fs');
       if (fs.existsSync(filePath)) {
@@ -664,9 +756,9 @@ export async function deleteImportedCases(req: AuthenticatedRequest, res: Respon
       return res.status(404).json({ message: 'Upload log record not found.' });
     }
 
-    // Optional explicit bulk delete for cases created from this upload
-    // Delete recovery_cases where loan imported_excel_data is present
+    // Delete recovery_cases and associated loans so no orphaned loans remain
     await query('DELETE FROM recovery_cases WHERE loan_id IN (SELECT id FROM loans WHERE imported_excel_data IS NOT NULL)');
+    await query('DELETE FROM loans WHERE imported_excel_data IS NOT NULL');
 
     await query(
       'INSERT INTO activity_logs (user_id, action, details) VALUES ($1, $2, $3)',

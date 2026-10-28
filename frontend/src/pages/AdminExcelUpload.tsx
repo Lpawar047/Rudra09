@@ -137,22 +137,21 @@ export const AdminExcelUpload: React.FC = () => {
         return;
       }
 
-      // Step 2: Automatically import into database
+      // Step 2: Automatically import all records into database via server-side batch processing
       const importRes = await api.post('/excel/import', {
         upload_id: valData.upload_id,
-        rows: valData.preview_rows,
       });
 
-      // Retain imported records to display automatically on screen
-      setImportedRows(valData.preview_rows);
+      // Retain preview records to display on screen
+      setImportedRows(importRes.data.preview_rows || valData.preview_rows || []);
       setImportSummary({
-        imported_new: importRes.data.imported_new_records || 0,
-        updated_existing: importRes.data.updated_existing_records || 0,
-        duplicate_rows: valData.duplicate_rows || 0,
-        total_rows: valData.total_rows || 0,
+        imported_new: importRes.data.imported_new_records ?? 0,
+        updated_existing: importRes.data.updated_existing_records ?? 0,
+        duplicate_rows: importRes.data.updated_existing_records ?? valData.duplicate_rows ?? 0,
+        total_rows: importRes.data.total_rows ?? valData.total_rows ?? 0,
       });
 
-      setSuccessMsg(`Excel data imported successfully! ${importRes.data.imported_new_records || 0} new recovery cases added, ${importRes.data.updated_existing_records || 0} updated.`);
+      setSuccessMsg(`Excel data imported successfully! ${importRes.data.imported_new_records ?? 0} new recovery cases added, ${importRes.data.updated_existing_records ?? 0} updated.`);
       setSelectedFile(null);
       fetchRecentUploads();
     } catch (err: any) {
@@ -163,7 +162,7 @@ export const AdminExcelUpload: React.FC = () => {
   };
 
   const handleConfirmImport = async () => {
-    if (!validationResult || !validationResult.preview_rows) return;
+    if (!validationResult || !validationResult.upload_id) return;
 
     setImporting(true);
     setErrorMsg('');
@@ -171,20 +170,19 @@ export const AdminExcelUpload: React.FC = () => {
     try {
       const res = await api.post('/excel/import', {
         upload_id: validationResult.upload_id,
-        rows: validationResult.preview_rows,
       });
 
-      // Retain imported records in state so they are automatically displayed on screen!
-      setImportedRows(validationResult.preview_rows);
+      // Retain imported records in state so they are automatically displayed on screen
+      setImportedRows(res.data.preview_rows || validationResult.preview_rows || []);
 
       setImportSummary({
-        imported_new: res.data.imported_new_records || 0,
-        updated_existing: res.data.updated_existing_records || 0,
-        duplicate_rows: validationResult.duplicate_rows || 0,
-        total_rows: validationResult.total_rows || 0,
+        imported_new: res.data.imported_new_records ?? 0,
+        updated_existing: res.data.updated_existing_records ?? 0,
+        duplicate_rows: res.data.updated_existing_records ?? validationResult.duplicate_rows ?? 0,
+        total_rows: res.data.total_rows ?? validationResult.total_rows ?? 0,
       });
 
-      setSuccessMsg(`Excel data imported successfully! ${res.data.imported_new_records || 0} new records added, ${res.data.updated_existing_records || 0} updated.`);
+      setSuccessMsg(`Excel data imported successfully! ${res.data.imported_new_records ?? 0} new records added, ${res.data.updated_existing_records ?? 0} updated.`);
       setValidationResult(null);
       setSelectedFile(null);
       fetchRecentUploads();

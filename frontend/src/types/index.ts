@@ -129,6 +129,7 @@ export interface RecoveryCase {
   last_followup_date?: string;
   next_followup_date?: string;
   location?: string;
+  taluka?: string | null;
   remarks?: string;
   created_at?: string;
 

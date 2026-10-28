@@ -446,9 +446,23 @@ export const CaseDetailsModal: React.FC<CaseDetailsModalProps> = ({
                   </div>
                 </div>
 
-                {/* City & Territory */}
-                {/* City & Territory */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-[#F2F2F2]">
+                {/* Taluka, City & Territory */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-[#F2F2F2]">
+                  <div>
+                    <span className="text-[12px] font-medium text-[#666666] uppercase tracking-wider block mb-0.5">
+                      Taluka
+                    </span>
+                    <span className="text-sm sm:text-[15px] font-semibold text-[#111111] block">
+                      {recoveryCase.taluka ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-[#FEF9C3] text-[#111111] border border-[#EAB308]">
+                          {recoveryCase.taluka}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-[#666666] font-normal">Not Specified</span>
+                      )}
+                    </span>
+                  </div>
+
                   <div>
                     <span className="text-[12px] font-medium text-[#666666] uppercase tracking-wider block mb-0.5">
                       City & Territory

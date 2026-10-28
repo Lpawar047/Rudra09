@@ -1,10 +1,24 @@
 import { Response } from 'express';
 import { query } from '../config/db';
 import { AuthenticatedRequest } from '../middleware/auth';
+import { normalizeTaluka } from '../utils/taluka';
 
 export async function getRecoveryCases(req: AuthenticatedRequest, res: Response) {
   try {
-    const { search, status, priority, employee_id, location, page = '1', limit = '20' } = req.query;
+    const { 
+      search, 
+      status, 
+      priority, 
+      employee_id, 
+      location, 
+      taluka,
+      bucket, 
+      bom_bucket, 
+      sort_by, 
+      sort_order, 
+      page = '1', 
+      limit = '20' 
+    } = req.query;
     const user = req.user!;
 
     const pageNum = Math.max(1, parseInt(String(page), 10) || 1);
@@ -14,7 +28,7 @@ export async function getRecoveryCases(req: AuthenticatedRequest, res: Response)
     let baseSql = `
       FROM recovery_cases r
       JOIN loans l ON r.loan_id = l.id
-      JOIN customers c ON l.customer_id = c.id
+      LEFT JOIN customers c ON l.customer_id = c.id
       LEFT JOIN vehicles v ON l.vehicle_id = v.id
       LEFT JOIN users emp ON r.assigned_employee_id = emp.id
       LEFT JOIN users mgr ON r.assigned_manager_id = mgr.id
@@ -23,51 +37,101 @@ export async function getRecoveryCases(req: AuthenticatedRequest, res: Response)
     const params: any[] = [];
     const conditions: string[] = [];
 
-    // Role-based scoping
+    // Role-based scoping: Field officers strictly view their assigned cases only
     if (user.role === 'EMPLOYEE') {
       conditions.push('r.assigned_employee_id = $' + (params.length + 1));
       params.push(user.id);
     } else if (user.role === 'MANAGER') {
-      conditions.push('(r.assigned_manager_id = $' + (params.length + 1) + ' OR r.assigned_manager_id IS NULL)');
-      params.push(user.id);
+      if (req.query.scope === 'mine' || req.query.assigned_only === 'true') {
+        conditions.push('(r.assigned_manager_id = $' + (params.length + 1) + ' OR r.assigned_manager_id IS NULL)');
+        params.push(user.id);
+      }
     }
 
+    // Search filter across entire dataset
     if (search && String(search).trim() !== '') {
       const cleanTerm = String(search).trim();
       const idx = params.length + 1;
       params.push(`%${cleanTerm}%`);
 
+      const numMatch = cleanTerm.replace(/^RC-?/i, '').trim();
+      let idCondition = '';
+      if (/^\d+$/.test(numMatch)) {
+        const idIdx = params.length + 1;
+        params.push(parseInt(numMatch, 10));
+        idCondition = ` OR r.id = $${idIdx}`;
+      }
+
       conditions.push(
         `(LOWER(l.loan_account_number) LIKE LOWER($${idx}) OR ` +
-        `LOWER(c.full_name) LIKE LOWER($${idx}) OR ` +
-        `LOWER(c.phone) LIKE LOWER($${idx}) OR ` +
-        `LOWER(v.registration_number) LIKE LOWER($${idx}) OR ` +
-        `LOWER(v.engine_number) LIKE LOWER($${idx}) OR ` +
-        `LOWER(v.chassis_number) LIKE LOWER($${idx}) OR ` +
-        `LOWER(v.model) LIKE LOWER($${idx}) OR ` +
-        `LOWER(c.city) LIKE LOWER($${idx}) OR ` +
-        `LOWER(c.address) LIKE LOWER($${idx}))`
+        `LOWER(COALESCE(c.full_name, '')) LIKE LOWER($${idx}) OR ` +
+        `LOWER(COALESCE(c.phone, '')) LIKE LOWER($${idx}) OR ` +
+        `LOWER(COALESCE(v.registration_number, '')) LIKE LOWER($${idx}) OR ` +
+        `LOWER(COALESCE(v.engine_number, '')) LIKE LOWER($${idx}) OR ` +
+        `LOWER(COALESCE(v.chassis_number, '')) LIKE LOWER($${idx}) OR ` +
+        `LOWER(COALESCE(v.model, '')) LIKE LOWER($${idx}) OR ` +
+        `LOWER(COALESCE(c.city, '')) LIKE LOWER($${idx}) OR ` +
+        `LOWER(COALESCE(c.address, '')) LIKE LOWER($${idx})${idCondition})`
       );
     }
 
+    // Status filter - 'ALL' or '' means all authorized cases
     if (status && String(status).trim() !== '') {
-      conditions.push('r.status = $' + (params.length + 1));
-      params.push(status);
+      const statusClean = String(status).trim();
+      if (statusClean.toUpperCase() !== 'ALL' && statusClean.toUpperCase() !== 'ALL_CASES') {
+        conditions.push('LOWER(r.status) = LOWER($' + (params.length + 1) + ')');
+        params.push(statusClean);
+      }
     }
 
+    // Priority filter
     if (priority && String(priority).trim() !== '') {
-      conditions.push('r.priority = $' + (params.length + 1));
-      params.push(priority);
+      const priorityClean = String(priority).trim();
+      if (priorityClean.toUpperCase() !== 'ALL') {
+        conditions.push('UPPER(r.priority) = UPPER($' + (params.length + 1) + ')');
+        params.push(priorityClean);
+      }
     }
 
+    // Employee assignment filter
     if (employee_id && String(employee_id).trim() !== '') {
-      conditions.push('r.assigned_employee_id = $' + (params.length + 1));
-      params.push(employee_id);
+      const empIdClean = String(employee_id).trim();
+      if (empIdClean.toUpperCase() === 'UNASSIGNED') {
+        conditions.push('r.assigned_employee_id IS NULL');
+      } else if (empIdClean.toUpperCase() !== 'ALL') {
+        conditions.push('r.assigned_employee_id = $' + (params.length + 1));
+        params.push(parseInt(empIdClean, 10));
+      }
     }
 
+    // Location / City filter
     if (location && String(location).trim() !== '') {
-      conditions.push('(r.location LIKE $' + (params.length + 1) + ' OR c.city LIKE $' + (params.length + 1) + ')');
-      params.push(`%${location}%`);
+      const locIdx = params.length + 1;
+      params.push(`%${String(location).trim()}%`);
+      conditions.push('(LOWER(COALESCE(r.location, \'\')) LIKE LOWER($' + locIdx + ') OR LOWER(COALESCE(c.city, \'\')) LIKE LOWER($' + locIdx + '))');
+    }
+
+    // Taluka filter - exact match on dedicated normalized column
+    if (taluka && String(taluka).trim() !== '') {
+      const cleanTaluka = String(taluka).trim();
+      if (cleanTaluka.toUpperCase() !== 'ALL' && cleanTaluka.toUpperCase() !== 'ALL TALUKAS') {
+        conditions.push('r.taluka = $' + (params.length + 1));
+        params.push(cleanTaluka);
+      }
+    }
+
+    // Server-side BOM Bucket filter
+    const activeBucket = String(bucket || bom_bucket || '').trim().toUpperCase();
+    if (activeBucket && activeBucket !== 'ALL') {
+      if (activeBucket === 'BOM 1' || activeBucket === 'BOM1') {
+        conditions.push('(COALESCE(l.dpd, 0) <= 30)');
+      } else if (activeBucket === 'BOM 2' || activeBucket === 'BOM2') {
+        conditions.push('(l.dpd > 30 AND l.dpd <= 60)');
+      } else if (activeBucket === 'BOM 3' || activeBucket === 'BOM3') {
+        conditions.push('(l.dpd > 60 AND l.dpd <= 90)');
+      } else if (activeBucket.includes('4') || activeBucket.includes('4+')) {
+        conditions.push('(l.dpd > 90)');
+      }
     }
 
     const whereClause = conditions.length > 0 ? ' WHERE ' + conditions.join(' AND ') : '';
@@ -78,11 +142,33 @@ export async function getRecoveryCases(req: AuthenticatedRequest, res: Response)
     const total = parseInt(countRes.rows[0]?.total || countRes.rows[0]?.count || '0', 10);
     const totalPages = Math.ceil(total / limitNum) || 1;
 
-    // 2. Fetch paginated records
+    // 2. Build sorting
+    const sortMap: Record<string, string> = {
+      id: 'r.id',
+      recovery_code: 'r.id',
+      proposal_no: 'l.loan_account_number',
+      loan_account_number: 'l.loan_account_number',
+      customer_name: 'c.full_name',
+      outstanding_amount: 'l.outstanding_amount',
+      emi_amount: 'l.emi_amount',
+      total_due: 'l.total_overdue',
+      total_overdue: 'l.total_overdue',
+      dpd: 'l.dpd',
+      status: 'r.status',
+      priority: 'r.priority',
+      taluka: 'r.taluka',
+      created_at: 'r.created_at',
+      updated_at: 'r.updated_at',
+    };
+
+    const sortCol = sort_by && sortMap[String(sort_by).toLowerCase()] ? sortMap[String(sort_by).toLowerCase()] : 'r.id';
+    const sortDir = String(sort_order).toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+
+    // 3. Fetch paginated records
     let selectSql = `
       SELECT 
         r.id, r.loan_id, r.assigned_employee_id, r.assigned_manager_id, r.priority, r.status,
-        r.due_date, r.last_followup_date, r.next_followup_date, r.location, r.remarks, r.created_at, r.updated_at,
+        r.due_date, r.last_followup_date, r.next_followup_date, r.location, r.taluka, r.remarks, r.created_at, r.updated_at,
         l.loan_account_number, l.outstanding_amount, l.total_overdue, l.dpd, l.emi_amount, l.emi_due_date,
         c.id as customer_id, c.full_name as customer_name, c.phone as customer_phone, c.address as customer_address, c.city as customer_city,
         v.id as vehicle_id, v.registration_number, v.model as vehicle_model, v.status as vehicle_status, v.engine_number, v.chassis_number,
@@ -90,19 +176,25 @@ export async function getRecoveryCases(req: AuthenticatedRequest, res: Response)
         mgr.name as assigned_manager_name
       ${baseSql}
       ${whereClause}
-      ORDER BY r.id DESC
+      ORDER BY ${sortCol} ${sortDir}
       LIMIT $${params.length + 1} OFFSET $${params.length + 2}
     `;
 
     const dataParams = [...params, limitNum, offset];
     const result = await query(selectSql, dataParams);
 
-    // Format recovery_code (e.g. RC-001, RC-002, RC-012) for each row
-    const cases = result.rows.map((row: any) => ({
-      ...row,
-      recovery_code: `RC-${String(row.id).padStart(3, '0')}`,
-      proposal_no: row.loan_account_number,
-    }));
+    // Format fields (recovery_code, proposal_no, bom_bucket, total_due) for each row
+    const cases = result.rows.map((row: any) => {
+      const dpd = row.dpd || 0;
+      const bomBucket = dpd <= 30 ? 'BOM 1' : dpd <= 60 ? 'BOM 2' : dpd <= 90 ? 'BOM 3' : 'BOM 4+';
+      return {
+        ...row,
+        recovery_code: `RC-${String(row.id).padStart(3, '0')}`,
+        proposal_no: row.loan_account_number,
+        bom_bucket: bomBucket,
+        total_due: parseFloat(String(row.total_overdue || row.outstanding_amount || 0)),
+      };
+    });
 
     return res.json({
       cases,
@@ -127,7 +219,7 @@ export async function getRecoveryCaseById(req: AuthenticatedRequest, res: Respon
     let sql = `
       SELECT 
         r.id, r.loan_id, r.assigned_employee_id, r.assigned_manager_id, r.priority, r.status,
-        r.due_date, r.last_followup_date, r.next_followup_date, r.location, r.remarks, r.created_at, r.updated_at,
+        r.due_date, r.last_followup_date, r.next_followup_date, r.location, r.taluka, r.remarks, r.created_at, r.updated_at,
         l.loan_account_number, l.outstanding_amount, l.total_overdue, l.dpd, l.emi_amount, l.emi_due_date, l.loan_amount,
         c.id as customer_id, c.customer_id as cust_code, c.full_name as customer_name, c.phone as customer_phone, c.alt_phone, c.email as customer_email, c.address as customer_address, c.city as customer_city, c.state as customer_state, c.pincode, c.employment_info,
         v.id as vehicle_id, v.registration_number, v.vehicle_type, v.manufacturer, v.model as vehicle_model, v.variant, v.chassis_number, v.engine_number, v.location as vehicle_location, v.status as vehicle_status,
@@ -148,13 +240,14 @@ export async function getRecoveryCaseById(req: AuthenticatedRequest, res: Respon
     }
 
     const caseData = result.rows[0];
+
+    // Authorization guard: Employees can only view cases assigned to them
+    if (user.role === 'EMPLOYEE' && caseData.assigned_employee_id !== user.id) {
+      return res.status(403).json({ message: 'Access denied: You are not assigned to this recovery case.' });
+    }
+
     caseData.recovery_code = `RC-${String(caseData.id).padStart(3, '0')}`;
     caseData.proposal_no = caseData.loan_account_number;
-
-    // Security restriction for EMPLOYEE
-    if (user.role === 'EMPLOYEE' && caseData.assigned_employee_id !== user.id) {
-      return res.status(403).json({ message: 'Access denied to this recovery case.' });
-    }
 
     // Fetch followups
     const followupsRes = await query(
@@ -202,15 +295,17 @@ export async function getRecoveryCaseById(req: AuthenticatedRequest, res: Respon
 
 export async function createRecoveryCase(req: AuthenticatedRequest, res: Response) {
   try {
-    const { loan_id, assigned_employee_id, assigned_manager_id, priority, status, due_date, location, remarks } = req.body;
+    const { loan_id, assigned_employee_id, assigned_manager_id, priority, status, due_date, location, taluka, remarks } = req.body;
 
     if (!loan_id) {
       return res.status(400).json({ message: 'Loan ID is required.' });
     }
 
+    const normalizedTaluka = taluka ? normalizeTaluka(taluka) : null;
+
     const sql = `
-      INSERT INTO recovery_cases (loan_id, assigned_employee_id, assigned_manager_id, priority, status, due_date, location, remarks)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      INSERT INTO recovery_cases (loan_id, assigned_employee_id, assigned_manager_id, priority, status, due_date, location, taluka, remarks)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING *
     `;
 
@@ -222,6 +317,7 @@ export async function createRecoveryCase(req: AuthenticatedRequest, res: Respons
       status || 'PENDING',
       due_date || null,
       location || null,
+      normalizedTaluka,
       remarks || null,
     ]);
 
@@ -245,7 +341,7 @@ export async function createRecoveryCase(req: AuthenticatedRequest, res: Respons
 export async function updateRecoveryCase(req: AuthenticatedRequest, res: Response) {
   try {
     const { id } = req.params;
-    const { priority, status, due_date, next_followup_date, location, remarks } = req.body;
+    const { priority, status, due_date, next_followup_date, location, taluka, remarks } = req.body;
     const user = req.user!;
 
     const existingRes = await query('SELECT * FROM recovery_cases WHERE id = $1', [id]);
@@ -259,10 +355,12 @@ export async function updateRecoveryCase(req: AuthenticatedRequest, res: Respons
       return res.status(403).json({ message: 'Permission denied to update this case.' });
     }
 
+    const normalizedTaluka = taluka !== undefined ? (taluka ? normalizeTaluka(taluka) : null) : currentCase.taluka;
+
     const sql = `
       UPDATE recovery_cases
-      SET priority = $1, status = $2, due_date = $3, next_followup_date = $4, location = $5, remarks = $6, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $7
+      SET priority = $1, status = $2, due_date = $3, next_followup_date = $4, location = $5, taluka = $6, remarks = $7, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $8
     `;
 
     await query(sql, [
@@ -271,6 +369,7 @@ export async function updateRecoveryCase(req: AuthenticatedRequest, res: Respons
       due_date !== undefined ? due_date : currentCase.due_date,
       next_followup_date !== undefined ? next_followup_date : currentCase.next_followup_date,
       location !== undefined ? location : currentCase.location,
+      normalizedTaluka,
       remarks !== undefined ? remarks : currentCase.remarks,
       id,
     ]);

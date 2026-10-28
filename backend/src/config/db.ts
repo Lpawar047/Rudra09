@@ -118,6 +118,9 @@ async function ensureDefaultUsers() {
 }
 
 export async function query(sql: string, params: any[] = []): Promise<{ rows: any[]; rowCount: number; lastID?: number }> {
+  if (!pgPool && !sqliteDb) {
+    await initDb();
+  }
   if (isPg && pgPool) {
     try {
       const res = await pgPool.query(sql, params);
@@ -267,6 +270,7 @@ async function migratePg() {
       last_followup_date TIMESTAMP,
       next_followup_date TIMESTAMP,
       location TEXT,
+      taluka VARCHAR(100),
       remarks TEXT,
       metadata JSONB DEFAULT '{}'::jsonb,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -377,6 +381,14 @@ async function migratePg() {
     CREATE INDEX IF NOT EXISTS idx_loans_meta ON loans USING GIN(metadata);
 
     CREATE INDEX IF NOT EXISTS idx_cases_loan ON recovery_cases(loan_id);
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'uq_recovery_cases_loan_id') THEN
+        ALTER TABLE recovery_cases ADD CONSTRAINT uq_recovery_cases_loan_id UNIQUE (loan_id);
+      END IF;
+    END $$;
+    ALTER TABLE recovery_cases ADD COLUMN IF NOT EXISTS taluka VARCHAR(100);
+    CREATE INDEX IF NOT EXISTS idx_cases_taluka ON recovery_cases(taluka);
     CREATE INDEX IF NOT EXISTS idx_cases_emp ON recovery_cases(assigned_employee_id);
     CREATE INDEX IF NOT EXISTS idx_cases_mgr ON recovery_cases(assigned_manager_id);
     CREATE INDEX IF NOT EXISTS idx_cases_status ON recovery_cases(status);
@@ -606,7 +618,8 @@ async function migrateSqlite() {
     `CREATE INDEX IF NOT EXISTS idx_vehicles_eng ON vehicles(engine_number);`,
     `CREATE INDEX IF NOT EXISTS idx_vehicles_chas ON vehicles(chassis_number);`,
     `CREATE INDEX IF NOT EXISTS idx_cust_phone ON customers(phone);`,
-    `CREATE INDEX IF NOT EXISTS idx_cust_name ON customers(full_name);`
+    `CREATE INDEX IF NOT EXISTS idx_cust_name ON customers(full_name);`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_cases_loan_unique ON recovery_cases(loan_id);`
   ];
 
   for (const statement of schema) {
@@ -624,5 +637,8 @@ async function migrateSqlite() {
   } catch (e) {}
   try {
     await sqliteDb.exec('ALTER TABLE users ADD COLUMN rejection_reason TEXT;');
+  } catch (e) {}
+  try {
+    await sqliteDb.exec('ALTER TABLE recovery_cases ADD COLUMN taluka TEXT;');
   } catch (e) {}
 }

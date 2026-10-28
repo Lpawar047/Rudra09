@@ -7,6 +7,8 @@ import { StatusBadge } from '../components/StatusBadge';
 import { PriorityBadge } from '../components/PriorityBadge';
 import { Modal } from '../components/Modal';
 import { CaseDetailsModal } from '../components/CaseDetailsModal';
+import { AssignmentSuccessModal, AssignmentData } from '../components/AssignmentSuccessModal';
+import { TALUKA_OPTIONS } from '../utils/taluka';
 import {
   Search,
   UserCheck,
@@ -43,6 +45,7 @@ export const AdminRecoveryCases: React.FC = () => {
   const [priorityFilter, setPriorityFilter] = useState('');
   const [employeeFilter, setEmployeeFilter] = useState('');
   const [bucketFilter, setBucketFilter] = useState('');
+  const [talukaFilter, setTalukaFilter] = useState('');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -55,6 +58,7 @@ export const AdminRecoveryCases: React.FC = () => {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showFollowupModal, setShowFollowupModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [assignmentSuccessData, setAssignmentSuccessData] = useState<AssignmentData | null>(null);
 
   // Clipboard copy state
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -81,7 +85,7 @@ export const AdminRecoveryCases: React.FC = () => {
 
   useEffect(() => {
     fetchCases();
-  }, [search, statusFilter, priorityFilter, employeeFilter, page, limit]);
+  }, [search, statusFilter, priorityFilter, employeeFilter, bucketFilter, talukaFilter, page, limit]);
 
   useEffect(() => {
     fetchEmployees();
@@ -94,7 +98,7 @@ export const AdminRecoveryCases: React.FC = () => {
     };
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [search, statusFilter, priorityFilter, employeeFilter, page, limit, bucketFilter]);
+  }, [search, statusFilter, priorityFilter, employeeFilter, bucketFilter, talukaFilter, page, limit]);
 
   const fetchCases = async () => {
     setIsLoading(true);
@@ -107,17 +111,11 @@ export const AdminRecoveryCases: React.FC = () => {
       if (statusFilter) params.status = statusFilter;
       if (priorityFilter) params.priority = priorityFilter;
       if (employeeFilter) params.employee_id = employeeFilter;
+      if (bucketFilter) params.bucket = bucketFilter;
+      if (talukaFilter) params.taluka = talukaFilter;
 
       const res = await api.get('/recovery-cases', { params });
-      let fetchedCases: RecoveryCase[] = res.data.cases || [];
-
-      // Optional client-side filter for BOM Bucket if selected
-      if (bucketFilter) {
-        fetchedCases = fetchedCases.filter((c) => {
-          const calculatedBucket = c.bom_bucket || (c.dpd ? (c.dpd <= 30 ? 'BOM 1' : c.dpd <= 60 ? 'BOM 2' : c.dpd <= 90 ? 'BOM 3' : 'BOM 4+') : 'BOM 1');
-          return calculatedBucket.toLowerCase().includes(bucketFilter.toLowerCase());
-        });
-      }
+      const fetchedCases: RecoveryCase[] = res.data.cases || [];
 
       setCases(fetchedCases);
       if (res.data.pagination) {
@@ -150,18 +148,51 @@ export const AdminRecoveryCases: React.FC = () => {
 
   const handleAssignSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCase || !assignEmpId) return;
+    if (!selectedCase || !assignEmpId) {
+      alert('Please select a field officer to assign this case.');
+      return;
+    }
     setIsSubmitting(true);
     try {
-      await api.post('/assignments', {
+      const res = await api.post('/assignments', {
         case_id: selectedCase.id,
         employee_id: parseInt(assignEmpId, 10),
         remarks: assignRemarks,
       });
+
       setShowAssignModal(false);
+      setAssignRemarks('');
       fetchCases();
-    } catch (err) {
-      alert('Failed to assign case.');
+
+      if (res.data?.assignment) {
+        setAssignmentSuccessData(res.data.assignment);
+      } else {
+        const assignedEmp = employees.find((emp) => emp.id === parseInt(assignEmpId, 10));
+        setAssignmentSuccessData({
+          case_id: selectedCase.id,
+          recovery_code: selectedCase.recovery_code || `RC-${String(selectedCase.id).padStart(3, '0')}`,
+          loan_account_number: selectedCase.loan_account_number || selectedCase.proposal_no || 'N/A',
+          customer_name: selectedCase.customer_name || 'N/A',
+          customer_phone: selectedCase.customer_phone,
+          customer_address: selectedCase.customer_address,
+          vehicle_reg_no: selectedCase.registration_number,
+          vehicle_model: selectedCase.vehicle_model,
+          taluka: selectedCase.taluka,
+          total_overdue: selectedCase.total_overdue,
+          dpd: selectedCase.dpd,
+          status: 'ASSIGNED',
+          employee_id: parseInt(assignEmpId, 10),
+          employee_name: assignedEmp?.name || 'Field Officer',
+          employee_email: assignedEmp?.email || '',
+          employee_phone: assignedEmp?.phone,
+          employee_dept: assignedEmp?.department,
+          remarks: assignRemarks,
+        });
+      }
+    } catch (err: any) {
+      console.error('Case assignment error:', err);
+      const errMsg = err.response?.data?.message || 'Failed to assign case. Please try again.';
+      alert(errMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -244,10 +275,11 @@ export const AdminRecoveryCases: React.FC = () => {
     setPriorityFilter('');
     setEmployeeFilter('');
     setBucketFilter('');
+    setTalukaFilter('');
     setPage(1);
   };
 
-  const hasActiveFilters = Boolean(search || statusFilter || priorityFilter || employeeFilter || bucketFilter);
+  const hasActiveFilters = Boolean(search || statusFilter || priorityFilter || employeeFilter || bucketFilter || talukaFilter);
 
   // Helper for BOM Bucket calculation
   const getBomBucket = (row: RecoveryCase) => {
@@ -398,7 +430,30 @@ export const AdminRecoveryCases: React.FC = () => {
       },
     },
 
-    // 7. EXCEL: Residence Address
+    // 7. EXCEL: Taluka
+    {
+      header: 'Taluka',
+      minWidth: '140px',
+      sortable: true,
+      accessor: (row) => {
+        const taluka = row.taluka;
+        return (
+          <div>
+            {taluka ? (
+              <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[12px] font-semibold bg-[#FEF9C3] text-[#111111] border border-[#EAB308]">
+                {taluka}
+              </span>
+            ) : (
+              <span className="text-[12px] font-medium text-[#666666]">
+                —
+              </span>
+            )}
+          </div>
+        );
+      },
+    },
+
+    // 8. EXCEL: Residence Address
     {
       header: 'Residence Address',
       minWidth: '280px',
@@ -643,9 +698,14 @@ export const AdminRecoveryCases: React.FC = () => {
       {/* 1. PAGE TITLE & HEADER BAR */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold font-heading text-[#111111] tracking-tight">
-            Recovery Cases
-          </h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold font-heading text-[#111111] tracking-tight">
+              Recovery Cases
+            </h1>
+            <span className="px-3 py-1 rounded-xl bg-[#FEF9C3] text-[#000000] border border-[#EAB308] font-bold text-xs sm:text-sm shadow-xs tabular-nums">
+              {total.toLocaleString('en-IN')} {hasActiveFilters ? 'Cases Found' : 'Total Cases'}
+            </span>
+          </div>
           <p className="text-sm text-[#666666] font-normal mt-1">
             Manage and track vehicle recovery operations, assignments and payment status.
           </p>
@@ -695,16 +755,16 @@ export const AdminRecoveryCases: React.FC = () => {
             type="button"
             onClick={() => setShowMobileFilters(!showMobileFilters)}
             className={`min-h-[44px] px-3.5 rounded-xl border text-[13px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-              showMobileFilters || (statusFilter || priorityFilter || employeeFilter || bucketFilter)
+              showMobileFilters || hasActiveFilters
                 ? 'bg-[#FACC15] text-[#000000] border-[#EAB308] shadow-xs'
                 : 'bg-[#FFFFFF] text-[#111111] border-[#D6D6D6]'
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
             <span>Filters</span>
-            {(statusFilter || priorityFilter || employeeFilter || bucketFilter) && (
+            {hasActiveFilters && (
               <span className="w-5 h-5 rounded-full bg-[#111111] text-[#FFFFFF] text-[10px] font-bold flex items-center justify-center">
-                {[statusFilter, priorityFilter, employeeFilter, bucketFilter].filter(Boolean).length}
+                {[statusFilter, priorityFilter, employeeFilter, bucketFilter, talukaFilter].filter(Boolean).length}
               </span>
             )}
           </button>
@@ -732,6 +792,26 @@ export const AdminRecoveryCases: React.FC = () => {
             <div className="space-y-2.5">
               <div>
                 <label className="text-[12px] font-medium text-[#666666] block mb-1">
+                  Taluka
+                </label>
+                <select
+                  value={talukaFilter}
+                  onChange={(e) => {
+                    setTalukaFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className="min-h-[44px] w-full px-3 py-2 text-[13px] bg-[#FFFFFF] border border-[#D6D6D6] rounded-xl text-[#111111] font-medium"
+                >
+                  {TALUKA_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt === 'All Talukas' ? '' : opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[12px] font-medium text-[#666666] block mb-1">
                   Payment / Recovery Status
                 </label>
                 <select
@@ -742,7 +822,7 @@ export const AdminRecoveryCases: React.FC = () => {
                   }}
                   className="min-h-[44px] w-full px-3 py-2 text-[13px] bg-[#FFFFFF] border border-[#D6D6D6] rounded-xl text-[#111111] font-medium"
                 >
-                  <option value="">All Recovery Statuses</option>
+                  <option value="">All Cases</option>
                   <option value="Paid">Paid</option>
                   <option value="Unpaid">Unpaid</option>
                   <option value="PENDING">PENDING</option>
@@ -831,8 +911,8 @@ export const AdminRecoveryCases: React.FC = () => {
           </div>
         )}
 
-        {/* Desktop & Tablet Filters (5 Columns) */}
-        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        {/* Desktop & Tablet Filters (6 Columns) */}
+        <div className="hidden sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {/* Main Search Input */}
           <div className="relative lg:col-span-1">
             <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-[#666666] pointer-events-none" />
@@ -848,6 +928,25 @@ export const AdminRecoveryCases: React.FC = () => {
             />
           </div>
 
+          {/* Taluka Filter */}
+          <div>
+            <select
+              value={talukaFilter}
+              onChange={(e) => {
+                setTalukaFilter(e.target.value);
+                setPage(1);
+              }}
+              className="min-h-[44px] w-full px-3.5 py-2.5 text-[13px] sm:text-[14px] bg-[#FFFFFF] border border-[#D6D6D6] rounded-xl text-[#111111] font-medium focus:outline-none focus:ring-2 focus:ring-[#FACC15]"
+              title="Taluka"
+            >
+              {TALUKA_OPTIONS.map((opt) => (
+                <option key={opt} value={opt === 'All Talukas' ? '' : opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Status Filter */}
           <div>
             <select
@@ -858,7 +957,7 @@ export const AdminRecoveryCases: React.FC = () => {
               }}
               className="min-h-[44px] w-full px-3.5 py-2.5 text-[13px] sm:text-[14px] bg-[#FFFFFF] border border-[#D6D6D6] rounded-xl text-[#111111] font-medium focus:outline-none focus:ring-2 focus:ring-[#FACC15]"
             >
-              <option value="">All Statuses</option>
+              <option value="">All Cases</option>
               <option value="Paid">Paid</option>
               <option value="Unpaid">Unpaid</option>
               <option value="PENDING">PENDING</option>
@@ -1028,6 +1127,16 @@ export const AdminRecoveryCases: React.FC = () => {
                   </span>
                 </div>
 
+                {/* Taluka */}
+                {item.taluka && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#666666] font-medium">Taluka:</span>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-[#FEF9C3] text-[#111111] border border-[#EAB308]">
+                      {item.taluka}
+                    </span>
+                  </div>
+                )}
+
                 {/* Total Due */}
                 <div className="flex items-center justify-between pt-1 border-t border-[#D6D6D6]/60">
                   <span className="text-[#666666] font-semibold">Total Due:</span>
@@ -1196,6 +1305,13 @@ export const AdminRecoveryCases: React.FC = () => {
           </div>
         </form>
       </Modal>
+
+      {/* 5.1 ASSIGNMENT SUCCESS CONFIRMATION DOSSIER MODAL */}
+      <AssignmentSuccessModal
+        isOpen={Boolean(assignmentSuccessData)}
+        onClose={() => setAssignmentSuccessData(null)}
+        assignment={assignmentSuccessData}
+      />
 
       {/* ========================================================================= */}
       {/* 6. STATUS & PRIORITY UPDATE MODAL                                         */}

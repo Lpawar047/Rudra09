@@ -1,44 +1,127 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ShieldCheck,
-  FileSpreadsheet,
-  Truck,
-  TrendingUp,
-  CreditCard,
-  Users,
-  CheckCircle2,
   ArrowRight,
-  Sparkles,
-  Layers,
-  Clock,
-  Lock,
-  ChevronRight,
-  BarChart3,
-  PhoneCall,
-  MapPin,
-  FileText,
-  Activity,
-  Database,
   Menu,
   X,
-  UserCheck,
-  Check,
-  Shield,
-  Briefcase,
-  UploadCloud,
-  FileCheck2,
-  PieChart,
+  Lock,
+  LayoutDashboard,
   LogOut,
-  LayoutDashboard
+  Shield,
+  Users,
+  Clock,
+  FileSpreadsheet,
+  ArrowUp,
+  FolderOpen
 } from 'lucide-react';
-import { ThemeToggle } from '../components/ThemeToggle';
 import { useAuth } from '../context/AuthContext';
 
+// ─── 0. LOGO COMPONENT ───────────────────────────────────────────────────────
+const RudraLogo: React.FC<{ size?: number; className?: string }> = ({ size = 36, className = '' }) => (
+  <div
+    className={`relative flex items-center justify-center rounded-lg bg-[#222222] border border-[#333333] text-white select-none shrink-0 ${className}`}
+    style={{ width: size, height: size }}
+    aria-hidden="true"
+  >
+    <div className="absolute top-1.5 bottom-1.5 left-1 w-[2px] bg-[#FFD600] rounded-full" />
+    <span className="font-bold text-sm tracking-tight text-white pl-1 font-mono">
+      R
+    </span>
+  </div>
+);
+
+// ─── 1. ABSTRACT GEOMETRIC HERO GRAPHIC ──────────────────────────────────────
+const AbstractHeroGraphic: React.FC = () => {
+  return (
+    <div
+      className="relative w-full max-w-[340px] sm:max-w-[420px] lg:max-w-[460px] aspect-[4/3] mx-auto select-none"
+      aria-hidden="true"
+    >
+      {/* Outer ambient glow */}
+      <div className="absolute inset-0 bg-radial from-[#FACC15]/10 via-transparent to-transparent rounded-2xl blur-xl" />
+
+      {/* Frame Container */}
+      <div className="relative w-full h-full rounded-2xl border border-[#2B2B2B] bg-[#161616]/80 p-5 sm:p-6 backdrop-blur-xs flex flex-col justify-between overflow-hidden shadow-2xl">
+        {/* Subtle Background Grid Pattern */}
+        <div className="absolute inset-0 hero-grid-pattern opacity-40 pointer-events-none" />
+
+        {/* Scanning Coordinate Accent Line */}
+        <div className="absolute left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-[#FFD600] to-transparent animate-line-scan pointer-events-none opacity-70" />
+
+        {/* Top Header / Coordinate Markers */}
+        <div className="relative z-10 flex items-center justify-between text-[10px] font-mono text-[#666666] uppercase tracking-wider">
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#FFD600] animate-pulse" />
+            <span className="text-[#A3A3A3]">SYS.01 // OPS_GRID</span>
+          </div>
+          <span className="text-[#666666]">NASHIK 20.00°N</span>
+        </div>
+
+        {/* Center: Abstract Architectural "R" Geometric Wireframe */}
+        <div className="relative z-10 my-auto flex items-center justify-center py-2">
+          <svg
+            viewBox="0 0 160 160"
+            className="w-32 h-32 sm:w-36 sm:h-36 text-white stroke-current fill-none"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            {/* Background Reference Crosshairs */}
+            <line x1="80" y1="10" x2="80" y2="150" stroke="#262626" strokeWidth="1" strokeDasharray="3 3" />
+            <line x1="10" y1="80" x2="150" y2="80" stroke="#262626" strokeWidth="1" strokeDasharray="3 3" />
+            <circle cx="80" cy="80" r="60" stroke="#262626" strokeWidth="1" />
+
+            {/* Geometric "R" Monogram Path */}
+            <path
+              d="M 45 130 L 45 30 L 95 30 C 112 30 120 42 120 55 C 120 68 112 80 95 80 L 45 80 M 85 80 L 122 130"
+              stroke="#FFFFFF"
+              strokeWidth="4"
+              className="drop-shadow-[0_0_12px_rgba(255,255,255,0.2)]"
+            />
+
+            {/* Accent Golden Yellow Indicator Line & Vertex Points */}
+            <line x1="45" y1="30" x2="45" y2="130" stroke="#FFD600" strokeWidth="4" />
+            <circle cx="45" cy="30" r="3.5" fill="#FFD600" />
+            <circle cx="45" cy="80" r="3.5" fill="#FFD600" />
+            <circle cx="95" cy="30" r="3" fill="#FFFFFF" />
+            <circle cx="120" cy="55" r="3" fill="#FFFFFF" />
+            <circle cx="95" cy="80" r="3" fill="#FFFFFF" />
+            <circle cx="122" cy="130" r="3.5" fill="#FFD600" />
+          </svg>
+        </div>
+
+        {/* Bottom Status Tickers */}
+        <div className="relative z-10 pt-2 border-t border-[#262626] flex items-center justify-between text-[10px] font-mono text-[#666666]">
+          <span className="flex items-center gap-1.5">
+            <span className="w-1 h-3 bg-[#FFD600] rounded-xs" />
+            <span className="text-[#A3A3A3]">PORTFOLIO READY</span>
+          </span>
+          <span className="text-[#666666] tabular-nums">LATENCY &lt; 15MS</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── MAIN HOME COMPONENT ────────────────────────────────────────────────────
 export const Home: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('home');
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [activeStep, setActiveStep] = useState(0);
+
+  // Section Observer Refs for Scroll Reveals
+  const aboutRef = useRef<HTMLElement>(null);
+  const featuresRef = useRef<HTMLElement>(null);
+  const howItWorksRef = useRef<HTMLElement>(null);
+  const whyUsRef = useRef<HTMLElement>(null);
+  const ctaRef = useRef<HTMLElement>(null);
+
+  const [visibleSections, setVisibleSections] = useState<Record<string, boolean>>({
+    home: true,
+  });
 
   const getDashboardPath = () => {
     if (!user) return '/login';
@@ -47,955 +130,825 @@ export const Home: React.FC = () => {
     return '/employee/dashboard';
   };
 
-  const scrollToSection = (id: string) => {
-    setMobileMenuOpen(false);
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+  const handleGetStarted = () => {
+    if (isAuthenticated && user) {
+      navigate(getDashboardPath());
+    } else {
+      navigate('/register');
     }
   };
 
+  const handleLogin = () => {
+    if (isAuthenticated && user) {
+      navigate(getDashboardPath());
+    } else {
+      navigate('/login');
+    }
+  };
+
+  const scrollToSection = (id: string) => {
+    setMobileMenuOpen(false);
+    setActiveSection(id);
+    if (id === 'home') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    const element = document.getElementById(id);
+    if (element) {
+      const navOffset = 70;
+      const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+      const offsetPosition = elementPosition - navOffset;
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  // Track scroll position for navbar style & active section
+  useEffect(() => {
+    const handleScroll = () => {
+      // Navbar scroll styling
+      if (window.scrollY > 15) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+
+      // Active section spy
+      const sections = ['home', 'about', 'features', 'how-it-works', 'why-us'];
+      const scrollPosition = window.scrollY + 120;
+
+      for (const sectionId of sections) {
+        if (sectionId === 'home' && window.scrollY < 200) {
+          setActiveSection('home');
+          break;
+        }
+        const el = document.getElementById(sectionId);
+        if (el) {
+          const top = el.offsetTop;
+          const height = el.offsetHeight;
+          if (scrollPosition >= top && scrollPosition < top + height) {
+            setActiveSection(sectionId);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // IntersectionObserver for subtle scroll reveals & step highlighting
+  useEffect(() => {
+    const observerCallback: IntersectionObserverCallback = (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setVisibleSections((prev) => ({
+            ...prev,
+            [entry.target.id]: true,
+          }));
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(observerCallback, {
+      threshold: 0.15,
+      rootMargin: '0px 0px -40px 0px',
+    });
+
+    const targets = [aboutRef.current, featuresRef.current, howItWorksRef.current, whyUsRef.current, ctaRef.current];
+    targets.forEach((target) => {
+      if (target) observer.observe(target);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Cycle active step subtly or on interval for demonstration
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveStep((prev) => (prev + 1) % 5);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-[#F8F8F8] text-[#111111] antialiased transition-colors selection:bg-[#FACC15] selection:text-[#000000]">
-      {/* 1. STICKY NAVBAR */}
-      <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/95 border-b border-[#D6D6D6] transition-colors shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo & Brand */}
-            <div
-              onClick={() => navigate('/')}
-              className="flex items-center gap-3 cursor-pointer group"
-            >
-              <img
-                src="/rudra-logo.jpg"
-                alt="Rudra Services"
-                className="h-10 w-auto rounded-lg object-contain bg-white p-0.5 border border-[#D6D6D6] shadow-xs group-hover:scale-105 transition-transform"
-              />
-              <div>
-                <span className="text-base sm:text-lg font-black tracking-wide text-[#111111] flex items-center gap-1.5">
-                  RUDRA SERVICES
-                </span>
-                <span className="block text-[10px] font-semibold text-[#666666] tracking-wider uppercase">
-                  Vehicle Recovery Management
-                </span>
+    <div className="min-h-screen bg-[#111111] text-[#111111] font-sans antialiased selection:bg-[#FFD600] selection:text-[#111111] overflow-x-hidden">
+      {/* ─────────────────────────────────────────────────────────────
+          1. NAVBAR (Sticky, 70px High, Clean & Scroll Adaptive)
+      ───────────────────────────────────────────────────────────── */}
+      <nav
+        aria-label="Main Navigation"
+        className={`sticky top-0 z-50 h-[70px] transition-all duration-200 ${
+          isScrolled
+            ? 'bg-[#0D0D0D]/95 backdrop-blur-md border-b border-[#2D2D2D] shadow-md shadow-black/20'
+            : 'bg-[#111111] border-b border-[#262626] shadow-none'
+        }`}
+      >
+        <div className="max-w-6xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          {/* LEFT: R logo + RUDRA SERVICES + RECOVERY & REPO PLATFORM */}
+          <div
+            onClick={() => scrollToSection('home')}
+            className="flex items-center gap-3 cursor-pointer group select-none"
+            tabIndex={0}
+            role="button"
+            aria-label="Rudra Services Home"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') scrollToSection('home');
+            }}
+          >
+            <RudraLogo size={36} />
+            <div className="flex flex-col text-left">
+              <span className="text-sm font-bold tracking-wider text-white uppercase leading-tight group-hover:text-white transition-colors">
+                RUDRA SERVICES
+              </span>
+              <span className="text-[9px] font-medium text-[#666666] tracking-widest uppercase">
+                Recovery & Repo Platform
+              </span>
+            </div>
+          </div>
+
+          {/* CENTER: Home, About, Features, How It Works, Why Us */}
+          <div className="hidden md:flex items-center gap-7 text-sm font-medium text-[#A3A3A3]">
+            {[
+              { id: 'home', label: 'Home' },
+              { id: 'about', label: 'About' },
+              { id: 'features', label: 'Features' },
+              { id: 'how-it-works', label: 'How It Works' },
+              { id: 'why-us', label: 'Why Us' },
+            ].map((link) => {
+              const isActive = activeSection === link.id;
+              return (
+                <button
+                  key={link.id}
+                  onClick={() => scrollToSection(link.id)}
+                  className={`relative py-2 transition-colors cursor-pointer hover:text-white ${
+                    isActive ? 'text-white font-semibold' : 'text-[#A3A3A3]'
+                  }`}
+                >
+                  <span>{link.label}</span>
+                  {isActive ? (
+                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#FFD600] rounded-full transition-all duration-200" />
+                  ) : (
+                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#FFD600] scale-x-0 hover:scale-x-100 transition-transform duration-150 origin-left" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* RIGHT: LOGIN & GET STARTED */}
+          <div className="hidden md:flex items-center gap-3">
+            {isAuthenticated && user ? (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => navigate(getDashboardPath())}
+                  className="min-h-[44px] px-5 bg-[#FFD600] hover:bg-[#FACC15] active:scale-[0.98] text-[#111111] rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-200 flex items-center gap-2 cursor-pointer shadow-xs"
+                >
+                  <LayoutDashboard className="w-4 h-4 text-[#111111]" />
+                  <span>{user.role} Portal</span>
+                </button>
+                <button
+                  onClick={logout}
+                  title="Logout"
+                  className="min-h-[44px] w-11 flex items-center justify-center text-[#666666] hover:text-white bg-[#1A1A1A] border border-[#262626] hover:border-[#404040] rounded-lg transition-colors cursor-pointer"
+                  aria-label="Logout"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
               </div>
-            </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                {/* LOGIN: Clean transparent button with border */}
+                <button
+                  onClick={handleLogin}
+                  className="min-h-[44px] px-5 bg-transparent hover:bg-[#1A1A1A] text-white border border-[#333333] hover:border-[#666666] rounded-lg text-xs font-semibold uppercase tracking-wider transition-all duration-200 cursor-pointer"
+                >
+                  LOGIN
+                </button>
+                {/* GET STARTED: Yellow background, black text, subtle hover movement */}
+                <button
+                  onClick={handleGetStarted}
+                  className="group min-h-[44px] px-5 bg-[#FFD600] hover:bg-[#FACC15] active:scale-[0.98] text-[#111111] rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <span>GET STARTED</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-[#111111] transition-transform duration-200 group-hover:translate-x-1" />
+                </button>
+              </div>
+            )}
+          </div>
 
-            {/* Desktop Navigation Links */}
-            <div className="hidden md:flex items-center gap-7 text-xs font-bold uppercase tracking-wider text-[#666666]">
-              <button
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="hover:text-[#000000] transition-colors cursor-pointer"
-              >
-                Home
-              </button>
-              <button
-                onClick={() => scrollToSection('features')}
-                className="hover:text-[#000000] transition-colors cursor-pointer"
-              >
-                Features
-              </button>
-              <button
-                onClick={() => scrollToSection('how-it-works')}
-                className="hover:text-[#000000] transition-colors cursor-pointer"
-              >
-                How It Works
-              </button>
-              <button
-                onClick={() => scrollToSection('roles')}
-                className="hover:text-[#000000] transition-colors cursor-pointer"
-              >
-                Roles & Portals
-              </button>
-              <button
-                onClick={() => scrollToSection('about')}
-                className="hover:text-[#000000] transition-colors cursor-pointer"
-              >
-                About
-              </button>
-            </div>
-
-            {/* Desktop Right Actions - Both Login and Register Visible */}
-            <div className="hidden md:flex items-center gap-3">
-              <ThemeToggle />
-
-              {isAuthenticated && user ? (
-                <div className="flex items-center gap-2.5">
-                  <button
-                    onClick={() => navigate(getDashboardPath())}
-                    className="min-h-[38px] px-4 py-1.5 bg-[#FACC15] hover:bg-[#EAB308] text-[#000000] rounded-lg text-xs font-black uppercase tracking-wider shadow-sm transition-all flex items-center gap-1.5 cursor-pointer border border-[#EAB308]"
-                  >
-                    <LayoutDashboard className="w-3.5 h-3.5 text-[#000000]" />
-                    <span>{user.role} Portal</span>
-                  </button>
-                  <button
-                    onClick={logout}
-                    title="Logout"
-                    className="min-h-[38px] p-2 text-[#666666] hover:text-[#000000] hover:bg-[#F2F2F2] rounded-lg transition-colors cursor-pointer"
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => navigate('/login')}
-                    className="min-h-[38px] px-4 py-2 bg-white hover:bg-[#F2F2F2] text-[#111111] hover:text-[#000000] border border-[#D6D6D6] hover:border-[#111111] rounded-lg text-xs font-black uppercase tracking-wider shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Lock className="w-3.5 h-3.5 text-[#666666]" />
-                    <span>Login</span>
-                  </button>
-                  <button
-                    onClick={() => navigate('/register')}
-                    className="min-h-[38px] px-4 py-2 bg-[#FACC15] hover:bg-[#FFD600] text-[#000000] rounded-lg text-xs font-black uppercase tracking-wider shadow-xs transition-all flex items-center gap-1.5 cursor-pointer border border-[#EAB308]"
-                  >
-                    <UserCheck className="w-3.5 h-3.5 text-[#000000]" />
-                    <span>Register</span>
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Mobile Hamburger Button */}
-            <div className="flex md:hidden items-center gap-2">
-              <ThemeToggle />
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 rounded-lg text-[#111111] hover:bg-[#F2F2F2] transition-colors"
-                aria-label="Toggle Navigation Menu"
-              >
-                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
-            </div>
+          {/* Mobile Hamburger Menu Button (min 44px touch target) */}
+          <div className="flex md:hidden items-center">
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-white bg-[#1A1A1A] border border-[#262626] hover:border-[#404040] transition-colors cursor-pointer"
+              aria-label="Toggle navigation menu"
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5 text-white" /> : <Menu className="w-5 h-5 text-white" />}
+            </button>
           </div>
         </div>
 
-        {/* Mobile Dropdown Menu */}
+        {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-b border-[#D6D6D6] bg-white px-4 py-4 space-y-3">
-            <button
-              onClick={() => { setMobileMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-              className="block w-full text-left py-2 text-sm font-bold text-[#111111] hover:text-[#EAB308]"
-            >
-              Home
-            </button>
-            <button
-              onClick={() => scrollToSection('features')}
-              className="block w-full text-left py-2 text-sm font-bold text-[#111111] hover:text-[#EAB308]"
-            >
-              Features
-            </button>
-            <button
-              onClick={() => scrollToSection('how-it-works')}
-              className="block w-full text-left py-2 text-sm font-bold text-[#111111] hover:text-[#EAB308]"
-            >
-              How It Works
-            </button>
-            <button
-              onClick={() => scrollToSection('roles')}
-              className="block w-full text-left py-2 text-sm font-bold text-[#111111] hover:text-[#EAB308]"
-            >
-              Roles & Portals
-            </button>
-            <button
-              onClick={() => scrollToSection('about')}
-              className="block w-full text-left py-2 text-sm font-bold text-[#111111] hover:text-[#EAB308]"
-            >
-              About
-            </button>
+          <div className="md:hidden border-b border-[#262626] bg-[#0E0E0E] px-4 py-5 space-y-2 shadow-2xl animate-in fade-in duration-200">
+            {[
+              { id: 'home', label: 'Home' },
+              { id: 'about', label: 'About' },
+              { id: 'features', label: 'Features' },
+              { id: 'how-it-works', label: 'How It Works' },
+              { id: 'why-us', label: 'Why Us' },
+            ].map((link) => (
+              <button
+                key={link.id}
+                onClick={() => scrollToSection(link.id)}
+                className={`min-h-[44px] w-full text-left px-3.5 flex items-center rounded-lg text-sm font-semibold transition-colors cursor-pointer ${
+                  activeSection === link.id
+                    ? 'bg-[#1C1C1C] text-white border-l-2 border-[#FFD600]'
+                    : 'text-[#A3A3A3] hover:text-white hover:bg-[#1A1A1A]'
+                }`}
+              >
+                {link.label}
+              </button>
+            ))}
 
-            <div className="pt-3 border-t border-[#D6D6D6]">
+            <div className="pt-3 border-t border-[#262626] space-y-2.5">
               {isAuthenticated && user ? (
-                <div className="space-y-2">
+                <>
                   <button
-                    onClick={() => { setMobileMenuOpen(false); navigate(getDashboardPath()); }}
-                    className="w-full py-2.5 bg-[#FACC15] text-[#000000] font-black text-xs uppercase tracking-wider rounded-lg text-center shadow-xs"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      navigate(getDashboardPath());
+                    }}
+                    className="w-full min-h-[44px] bg-[#FFD600] text-[#111111] font-bold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                   >
-                    Open {user.role} Dashboard
+                    Open {user.role} Portal
                   </button>
                   <button
-                    onClick={() => { setMobileMenuOpen(false); logout(); }}
-                    className="w-full py-2 bg-[#F2F2F2] text-[#111111] font-bold text-xs uppercase tracking-wider rounded-lg text-center"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      logout();
+                    }}
+                    className="w-full min-h-[44px] bg-[#1A1A1A] text-white border border-[#262626] font-semibold text-xs uppercase tracking-wider rounded-lg cursor-pointer"
                   >
                     Logout
                   </button>
-                </div>
+                </>
               ) : (
-                <div className="space-y-2">
+                <>
                   <button
-                    onClick={() => { setMobileMenuOpen(false); navigate('/login'); }}
-                    className="w-full py-3 bg-[#111111] hover:bg-[#333333] text-white font-black text-xs uppercase tracking-wider rounded-xl text-center shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleGetStarted();
+                    }}
+                    className="w-full min-h-[44px] bg-[#FFD600] hover:bg-[#FACC15] text-[#111111] font-bold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                   >
-                    <Lock className="w-4 h-4 text-[#FACC15]" />
-                    <span>Login to Portal</span>
+                    <span>GET STARTED</span>
+                    <ArrowRight className="w-4 h-4 text-[#111111]" />
                   </button>
                   <button
-                    onClick={() => { setMobileMenuOpen(false); navigate('/register'); }}
-                    className="w-full py-3 bg-[#FACC15] hover:bg-[#FFD600] text-[#000000] font-black text-xs uppercase tracking-wider rounded-xl text-center shadow-xs border border-[#EAB308] flex items-center justify-center gap-2 cursor-pointer"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleLogin();
+                    }}
+                    className="w-full min-h-[44px] bg-transparent text-white border border-[#333333] hover:border-[#666666] font-semibold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <UserCheck className="w-4 h-4 text-[#000000]" />
-                    <span>Register Field Officer</span>
+                    <Lock className="w-4 h-4 text-[#A3A3A3]" />
+                    <span>LOGIN</span>
                   </button>
-                </div>
+                </>
               )}
             </div>
           </div>
         )}
       </nav>
 
-      {/* 2. TWO-COLUMN HERO SECTION */}
-      <header className="relative pt-12 pb-20 md:pt-16 md:pb-28 overflow-hidden">
-        {/* Ambient Warm Glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[450px] bg-gradient-to-tr from-[#FACC15]/10 via-[#FFD600]/5 to-transparent rounded-full blur-3xl pointer-events-none -z-10" />
+      <main>
+        {/* ─────────────────────────────────────────────────────────────
+            2. HERO SECTION (Black Theme, Geometric Visual, Photo-Free)
+        ───────────────────────────────────────────────────────────── */}
+        <header
+          id="home"
+          className="relative py-16 sm:py-24 lg:py-28 bg-[#111111] text-white border-b border-[#262626] flex items-center justify-center text-center overflow-hidden"
+        >
+          {/* Subtle Radial Gradient Accent in Background */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-radial from-[#FFD600]/5 via-transparent to-transparent pointer-events-none blur-3xl" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-            {/* Left Column: Value Proposition & CTAs */}
-            <div className="lg:col-span-7 space-y-6 text-left">
-              {/* Subtle Badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-[#FEF9C3] text-[#111111] border border-[#EAB308]/60 shadow-xs">
-                <span className="w-2 h-2 rounded-full bg-[#FACC15] animate-pulse" />
-                <span>Vehicle Recovery Operations</span>
-              </div>
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-7 relative z-10 w-full">
+            {/* Eyebrow: Small Yellow Line */}
+            <div className="w-12 h-1 bg-[#FFD600] mx-auto rounded-full" />
 
-              {/* Authoritative SaaS Heading */}
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#111111] tracking-tight leading-[1.12]">
-                Smarter Vehicle Recovery.{' '}
-                <span className="bg-gradient-to-r from-[#EAB308] via-[#FACC15] to-[#FFD600] bg-clip-text text-transparent">
-                  Simpler Operations.
-                </span>
-              </h1>
+            {/* Main Heading: RECOVER (white) MOVE (yellow) FORWARD (white) */}
+            <h1 className="text-[34px] min-[375px]:text-[38px] sm:text-[46px] lg:text-[56px] font-extrabold tracking-tight leading-[1.1] uppercase max-w-3xl mx-auto break-words">
+              RECOVER. <span className="text-[#FFD600]">MOVE.</span> FORWARD.
+            </h1>
 
-              {/* Clear Value Proposition Description */}
-              <p className="text-base sm:text-lg text-[#666666] leading-relaxed font-normal max-w-2xl">
-                Streamline recovery cases, field operations, employee tracking, and financial reconciliation for vehicle finance and repossession teams with an enterprise-grade platform.
-              </p>
+            {/* Subheading text */}
+            <p className="text-sm min-[375px]:text-base sm:text-lg text-[#A3A3A3] max-w-xl mx-auto leading-relaxed px-2 font-normal">
+              A simple platform for managing vehicle recovery and field operations.
+            </p>
 
-              {/* Primary Dual Actions: Both Login & Register Clearly Visible */}
-              <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                <button
-                  onClick={() => navigate('/login')}
-                  className="min-h-[50px] px-8 bg-[#111111] hover:bg-[#333333] text-white text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 group cursor-pointer border border-[#111111]"
-                >
-                  <Lock className="w-4 h-4 text-[#FACC15]" />
-                  <span>Login to Portal</span>
-                  <ArrowRight className="w-4 h-4 text-[#FACC15] group-hover:translate-x-1 transition-transform" />
-                </button>
-                <button
-                  onClick={() => navigate('/register')}
-                  className="min-h-[50px] px-8 bg-[#FACC15] hover:bg-[#FFD600] text-[#000000] border border-[#EAB308] text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <UserCheck className="w-4 h-4 text-[#000000]" />
-                  <span>Register Account</span>
-                </button>
-                <button
-                  onClick={() => scrollToSection('features')}
-                  className="min-h-[50px] px-6 bg-white hover:bg-[#F2F2F2] text-[#111111] border border-[#D6D6D6] text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <span>Explore Features</span>
-                </button>
-              </div>
-
-              {/* Direct Access for Both Roles & Portals */}
-              <div className="p-3.5 rounded-xl bg-white border border-[#D6D6D6] shadow-xs">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-bold text-[#666666] uppercase tracking-wider">
-                    Quick Role Access
-                  </span>
-                  <span className="text-[10px] text-[#000000] font-black uppercase tracking-wider bg-[#FEF9C3] px-2 py-0.5 rounded border border-[#EAB308]">
-                    Direct Portals
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    onClick={() => navigate('/login')}
-                    className="p-2.5 rounded-lg bg-[#F8F8F8] hover:bg-[#FEF9C3] border border-[#D6D6D6] hover:border-[#EAB308] text-left transition-all cursor-pointer group"
-                  >
-                    <span className="block text-[11px] font-black text-[#111111] group-hover:text-[#000000]">Admin</span>
-                    <span className="block text-[10px] text-[#666666]">System Command →</span>
-                  </button>
-                  <button
-                    onClick={() => navigate('/login')}
-                    className="p-2.5 rounded-lg bg-[#F8F8F8] hover:bg-[#FEF9C3] border border-[#D6D6D6] hover:border-[#EAB308] text-left transition-all cursor-pointer group"
-                  >
-                    <span className="block text-[11px] font-black text-[#111111] group-hover:text-[#000000]">Manager</span>
-                    <span className="block text-[10px] text-[#666666]">Supervisor Console →</span>
-                  </button>
-                  <button
-                    onClick={() => navigate('/login')}
-                    className="p-2.5 rounded-lg bg-[#F8F8F8] hover:bg-[#FEF9C3] border border-[#D6D6D6] hover:border-[#EAB308] text-left transition-all cursor-pointer group"
-                  >
-                    <span className="block text-[11px] font-black text-[#111111] group-hover:text-[#000000]">Field Officer</span>
-                    <span className="block text-[10px] text-[#666666]">Ground Workspace →</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Trust Points / Key Value Badges */}
-              <div className="pt-4 border-t border-[#D6D6D6] grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs text-[#666666] font-semibold">
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#EAB308] shrink-0" />
-                  <span>Role-Based Access</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#EAB308] shrink-0" />
-                  <span>Real-Time Tracking</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#EAB308] shrink-0" />
-                  <span>Excel Ingestion</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#EAB308] shrink-0" />
-                  <span>POS Reconciliation</span>
-                </div>
-              </div>
+            {/* Centered Buttons: comfortable side-by-side on sm+, stacked on mobile */}
+            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 max-w-xs sm:max-w-md mx-auto">
+              <button
+                onClick={handleGetStarted}
+                className="group w-full sm:w-auto min-h-[48px] px-8 bg-[#FFD600] hover:bg-[#FACC15] active:scale-[0.98] text-[#111111] font-bold text-sm uppercase tracking-wider rounded-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+              >
+                <span>GET STARTED</span>
+                <ArrowRight className="w-4 h-4 text-[#111111] transition-transform duration-200 group-hover:translate-x-1" />
+              </button>
+              <button
+                onClick={handleLogin}
+                className="w-full sm:w-auto min-h-[48px] px-8 bg-transparent hover:bg-[#1A1A1A] text-white border border-[#404040] hover:border-white font-semibold text-sm uppercase tracking-wider rounded-lg transition-all duration-200 flex items-center justify-center cursor-pointer"
+              >
+                <span>LOGIN</span>
+              </button>
             </div>
 
-            {/* Right Column: Realistic SaaS Product Preview */}
-            <div className="lg:col-span-5 relative">
-              {/* Glow Behind Mockup */}
-              <div className="absolute -inset-1 bg-[#FACC15]/20 rounded-3xl blur-xl opacity-30 -z-10" />
+            {/* Hero Abstract Geometric Design */}
+            <div className="pt-4 sm:pt-6">
+              <AbstractHeroGraphic />
+            </div>
+          </div>
+        </header>
 
-              <div className="rounded-2xl border border-[#333333] bg-[#111111] text-white shadow-2xl overflow-hidden">
-                {/* Mock Window Top Bar */}
-                <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#1F1F1F] bg-[#000000] text-[#D6D6D6] text-xs font-mono">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#333333]" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#666666]" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#FACC15]" />
-                    <span className="ml-2 text-[11px] text-[#D6D6D6] hidden sm:inline-block">
-                      portal.rudraservices.com/dashboard
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[10px] text-[#000000] bg-[#FACC15] font-black px-2 py-0.5 rounded border border-[#EAB308]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#000000] animate-pulse" />
-                    <span>Neon PostgreSQL Live</span>
-                  </div>
-                </div>
+        {/* ─────────────────────────────────────────────────────────────
+            3. ABOUT SECTION (WHITE Background, Simple, 4 Interactive Cards)
+        ───────────────────────────────────────────────────────────── */}
+        <section
+          ref={aboutRef}
+          id="about"
+          className="py-18 sm:py-24 bg-[#FFFFFF] text-[#111111] border-b border-[#E5E5E5] transition-all duration-300"
+        >
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+            {/* Header: ABOUT RUDRA SERVICES & Simple recovery operations. */}
+            <div className="text-center max-w-2xl mx-auto space-y-2">
+              <span className="text-xs font-bold text-[#666666] tracking-widest uppercase block">
+                ABOUT RUDRA SERVICES
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#111111] tracking-tight">
+                Simple recovery operations.
+              </h2>
+              <p className="text-sm sm:text-base text-[#666666] leading-relaxed pt-1 max-w-xl mx-auto">
+                Rudra Services simplifies vehicle recovery by bringing cases, field teams, follow-ups, and portfolio data into one clear workspace.
+              </p>
+            </div>
 
-                {/* Card Content */}
-                <div className="p-4 sm:p-5 space-y-4">
-                  {/* Header with Illustrative Badge */}
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] font-black uppercase tracking-wider text-[#FACC15] block">
-                        LIVE OPERATIONS DASHBOARD
-                      </span>
-                      <h4 className="text-sm font-black text-white">Recovery Portfolio Snapshot</h4>
-                    </div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#1F1F1F] text-[#FACC15] border border-[#333333]">
-                      Real-time
-                    </span>
-                  </div>
-
-                  {/* Mini KPI Metric Grid */}
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div className="p-3 rounded-xl bg-[#1F1F1F] border border-[#333333]">
-                      <span className="text-[10px] font-bold uppercase text-[#D6D6D6] block">Active Portfolio</span>
-                      <span className="text-lg font-black text-white block mt-0.5">₹5,24,00,000</span>
-                      <span className="text-[10px] text-[#FACC15] font-bold flex items-center gap-0.5 mt-0.5">
-                        <TrendingUp className="w-3 h-3 text-[#FACC15]" /> +12.4% MoM
-                      </span>
-                    </div>
-                    <div className="p-3 rounded-xl bg-[#1F1F1F] border border-[#333333]">
-                      <span className="text-[10px] font-bold uppercase text-[#D6D6D6] block">Collections</span>
-                      <span className="text-lg font-black text-[#FACC15] block mt-0.5">₹36,22,000</span>
-                      <span className="text-[10px] text-[#D6D6D6] font-medium block mt-0.5">34 Receipts Logged</span>
-                    </div>
-                    <div className="p-3 rounded-xl bg-[#1F1F1F] border border-[#333333]">
-                      <span className="text-[10px] font-bold uppercase text-[#D6D6D6] block">Recovery Cases</span>
-                      <span className="text-lg font-black text-white block mt-0.5">1,420 Active</span>
-                      <span className="text-[10px] text-[#FACC15] font-bold block mt-0.5">48 Critical DPD</span>
-                    </div>
-                    <div className="p-3 rounded-xl bg-[#1F1F1F] border border-[#333333]">
-                      <span className="text-[10px] font-bold uppercase text-[#D6D6D6] block">Resolution Rate</span>
-                      <span className="text-lg font-black text-white block mt-0.5">94.2%</span>
-                      <span className="text-[10px] text-[#FACC15] font-medium block mt-0.5">18 Field Officers</span>
-                    </div>
-                  </div>
-
-                  {/* Mini Case Row Preview */}
-                  <div className="p-3 rounded-xl bg-[#1F1F1F] border border-[#333333] space-y-2">
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-[#D6D6D6] font-bold uppercase tracking-wider">Recent Case Allocation</span>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-black bg-[#FEF9C3] text-[#000000] border border-[#EAB308]">
-                        ALLOCATED
-                      </span>
-                    </div>
+            {/* 4 Interactive Elements: CASES, TEAMS, FOLLOW-UPS, DATA */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+              {[
+                {
+                  id: 'cases',
+                  title: 'CASES',
+                  desc: 'Delinquent vehicle loan portfolio management and recovery tracking.',
+                },
+                {
+                  id: 'teams',
+                  title: 'TEAMS',
+                  desc: 'Field officer delegation and Nashik territory coordination.',
+                },
+                {
+                  id: 'followups',
+                  title: 'FOLLOW-UPS',
+                  desc: 'Structured borrower contact, visit logs, and promise to pay.',
+                },
+                {
+                  id: 'data',
+                  title: 'DATA',
+                  desc: 'High-volume Excel ingestion, validation, and status updates.',
+                },
+              ].map((item, idx) => (
+                <div
+                  key={item.id}
+                  className={`group relative p-5 rounded-xl bg-[#FFFFFF] border border-[#E5E5E5] hover:border-[#111111] transition-all duration-200 hover:-translate-y-1 hover:shadow-md cursor-default flex flex-col justify-between space-y-3 ${
+                    visibleSections['about'] ? 'opacity-100 translate-y-0' : 'opacity-90'
+                  }`}
+                  style={{ transitionDelay: `${idx * 50}ms` }}
+                >
+                  <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <div>
-                        <span className="font-extrabold text-xs text-white block">Ramesh Kumar</span>
-                        <span className="text-[11px] font-mono text-[#D6D6D6]">PROP10001 • Tata Ace Gold</span>
+                      <span className="text-xs font-mono font-bold text-[#666666] group-hover:text-[#111111] transition-colors">
+                        0{idx + 1}
+                      </span>
+                      {/* Interactive Accent Dot */}
+                      <span className="w-1.5 h-1.5 rounded-full bg-transparent group-hover:bg-[#FFD600] transition-colors duration-200" />
+                    </div>
+                    <h3 className="text-base font-bold text-[#111111] tracking-wide uppercase">
+                      {item.title}
+                    </h3>
+                    <p className="text-xs text-[#666666] leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </div>
+
+                  {/* Interactive Accent Line that appears/slides on hover */}
+                  <div className="w-full h-1 bg-[#F5F5F5] rounded-full overflow-hidden">
+                    <div className="w-full h-full bg-[#FFD600] scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-left" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─────────────────────────────────────────────────────────────
+            4. FEATURES SECTION (LIGHT GRAY Background, 4 Clean Cards)
+        ───────────────────────────────────────────────────────────── */}
+        <section
+          ref={featuresRef}
+          id="features"
+          className="py-18 sm:py-24 bg-[#F5F5F5] text-[#111111] border-b border-[#E5E5E5]"
+        >
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Header: WHAT YOU CAN DO & Everything your team needs. */}
+            <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-14 space-y-2">
+              <span className="text-xs font-bold text-[#666666] tracking-widest uppercase block">
+                WHAT YOU CAN DO
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#111111] tracking-tight">
+                Everything your team needs.
+              </h2>
+            </div>
+
+            {/* 4 Cards: RECOVERY CASES, TEAM MANAGEMENT, FOLLOW-UPS, EXCEL IMPORT */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+              {[
+                {
+                  id: 'recovery-cases',
+                  title: 'RECOVERY CASES',
+                  sub: 'Recovery Cases',
+                  desc: 'Track and organize overdue vehicle loans across all recovery stages.',
+                  icon: Shield,
+                },
+                {
+                  id: 'team-management',
+                  title: 'TEAM MANAGEMENT',
+                  sub: 'Team Management',
+                  desc: 'Supervise field recovery agents and assign accounts by territory.',
+                  icon: Users,
+                },
+                {
+                  id: 'follow-ups',
+                  title: 'FOLLOW-UPS',
+                  sub: 'Follow-ups',
+                  desc: 'Log field interactions, calls, and promises to pay in real time.',
+                  icon: Clock,
+                },
+                {
+                  id: 'excel-import',
+                  title: 'EXCEL IMPORT',
+                  sub: 'Excel Import',
+                  desc: 'Ingest thousands of bank loan records with automated validation.',
+                  icon: FileSpreadsheet,
+                },
+              ].map((card, idx) => {
+                const Icon = card.icon;
+                return (
+                  <div
+                    key={card.id}
+                    className={`group relative p-6 rounded-xl bg-[#FFFFFF] border border-[#E5E5E5] hover:border-[#FFD600] hover:-translate-y-1 hover:shadow-lg hover:shadow-black/5 transition-all duration-200 flex flex-col justify-between space-y-4 cursor-default ${
+                      visibleSections['features'] ? 'opacity-100 translate-y-0' : 'opacity-90'
+                    }`}
+                    style={{ transitionDelay: `${idx * 60}ms` }}
+                  >
+                    <div className="space-y-3.5">
+                      {/* Icon Container: shifts slightly on hover */}
+                      <div className="w-10 h-10 rounded-lg bg-[#111111] text-white flex items-center justify-center transition-transform duration-200 group-hover:scale-105 group-hover:-translate-y-0.5">
+                        <Icon className="w-5 h-5 text-white" />
                       </div>
-                      <div className="text-right">
-                        <span className="text-xs font-black text-[#FACC15] block">₹2,50,000</span>
-                        <span className="text-[10px] text-[#D6D6D6] font-semibold">60 DPD (BOM 2)</span>
+                      <h3 className="text-base font-bold text-[#111111] tracking-tight">
+                        {card.sub}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-[#666666] leading-relaxed">
+                        {card.desc}
+                      </p>
+                    </div>
+
+                    {/* Bottom: Arrow icon that slides right on hover */}
+                    <div className="pt-2 flex items-center justify-between border-t border-[#F0F0F0]">
+                      <span className="text-[11px] font-mono font-bold text-[#A3A3A3] group-hover:text-[#111111] transition-colors">
+                        0{idx + 1}
+                      </span>
+                      <div className="flex items-center gap-1 text-xs font-bold text-[#111111] group-hover:text-[#000000]">
+                        <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1 text-[#111111]" />
                       </div>
                     </div>
                   </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
 
-                  {/* Mini Recent Activity Card */}
-                  <div className="p-3 rounded-xl bg-[#1F1F1F] border border-[#333333] space-y-2">
-                    <span className="text-[10px] font-bold uppercase text-[#D6D6D6] block">Ground Field Stream</span>
-                    <div className="space-y-1.5 text-[11px]">
-                      <div className="flex items-center justify-between text-[#FFFFFF]">
-                        <span className="flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-[#FACC15] shrink-0" />
-                          <span>Follow-up logged for MH-12-CD-5678</span>
+        {/* ─────────────────────────────────────────────────────────────
+            5. HOW IT WORKS (WHITE Background, 5 Step Timeline)
+        ───────────────────────────────────────────────────────────── */}
+        <section
+          ref={howItWorksRef}
+          id="how-it-works"
+          className="py-18 sm:py-24 bg-[#FFFFFF] text-[#111111] border-b border-[#E5E5E5]"
+        >
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Header: HOW IT WORKS & From data to recovery. */}
+            <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-14 space-y-2">
+              <span className="text-xs font-bold text-[#666666] tracking-widest uppercase block">
+                HOW IT WORKS
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#111111] tracking-tight">
+                From data to recovery.
+              </h2>
+            </div>
+
+            {/* Desktop Timeline (Horizontal 5-step grid) */}
+            <div className="hidden lg:grid grid-cols-5 gap-3 relative">
+              {/* Horizontal Connecting Guide Line behind cards */}
+              <div className="absolute top-1/2 left-6 right-6 h-[2px] bg-[#E5E5E5] -translate-y-6 pointer-events-none z-0" />
+
+              {[
+                { num: '01', title: 'IMPORT', desc: 'Ingest recovery portfolios from bank spreadsheets.' },
+                { num: '02', title: 'ORGANIZE', desc: 'Structure cases by Taluka, DPD aging, and priority.' },
+                { num: '03', title: 'ASSIGN', desc: 'Delegate accounts directly to local field recovery officers.' },
+                { num: '04', title: 'FOLLOW UP', desc: 'Record borrower visits, call logs, and payment commitments.' },
+                { num: '05', title: 'RECOVER', desc: 'Close resolved cases and reconcile collected funds.' },
+              ].map((step, idx) => {
+                const isHighlighted = activeStep === idx;
+                return (
+                  <div
+                    key={step.num}
+                    onMouseEnter={() => setActiveStep(idx)}
+                    className={`relative z-10 p-5 rounded-xl transition-all duration-200 flex flex-col justify-between space-y-3 cursor-pointer ${
+                      isHighlighted
+                        ? 'bg-[#111111] text-white border-2 border-[#FFD600] shadow-md -translate-y-1'
+                        : 'bg-[#F7F7F7] text-[#111111] border border-[#E5E5E5] hover:border-[#CCCCCC]'
+                    }`}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span
+                          className={`text-xs font-mono font-bold ${
+                            isHighlighted ? 'text-[#FFD600]' : 'text-[#666666]'
+                          }`}
+                        >
+                          {step.num}
                         </span>
-                        <span className="text-[10px] text-[#666666] font-mono">2m ago</span>
+                        <span
+                          className={`w-2 h-2 rounded-full ${
+                            isHighlighted ? 'bg-[#FFD600]' : 'bg-[#D6D6D6]'
+                          }`}
+                        />
                       </div>
-                      <div className="flex items-center justify-between text-[#FFFFFF]">
-                        <span className="flex items-center gap-1.5">
-                          <CreditCard className="w-3.5 h-3.5 text-[#FACC15] shrink-0" />
-                          <span>Payment collected: ₹25,000 (UPI)</span>
-                        </span>
-                        <span className="text-[10px] text-[#666666] font-mono">14m ago</span>
-                      </div>
+                      <h3
+                        className={`text-sm font-bold uppercase tracking-wider ${
+                          isHighlighted ? 'text-white' : 'text-[#111111]'
+                        }`}
+                      >
+                        {step.title}
+                      </h3>
+                      <p
+                        className={`text-xs leading-relaxed ${
+                          isHighlighted ? 'text-[#D1D1D1]' : 'text-[#666666]'
+                        }`}
+                      >
+                        {step.desc}
+                      </p>
                     </div>
                   </div>
+                );
+              })}
+            </div>
+
+            {/* Mobile / Tablet Vertical Timeline (Clean, no horizontal overflow) */}
+            <div className="lg:hidden relative pl-6 sm:pl-8 border-l-2 border-[#E5E5E5] space-y-6 max-w-xl mx-auto">
+              {[
+                { num: '01', title: 'IMPORT', desc: 'Ingest recovery portfolios from bank spreadsheets.' },
+                { num: '02', title: 'ORGANIZE', desc: 'Structure cases by Taluka, DPD aging, and priority.' },
+                { num: '03', title: 'ASSIGN', desc: 'Delegate accounts directly to local field recovery officers.' },
+                { num: '04', title: 'FOLLOW UP', desc: 'Record borrower visits, call logs, and payment commitments.' },
+                { num: '05', title: 'RECOVER', desc: 'Close resolved cases and reconcile collected funds.' },
+              ].map((step, idx) => {
+                const isHighlighted = activeStep === idx;
+                return (
+                  <div
+                    key={step.num}
+                    onClick={() => setActiveStep(idx)}
+                    className="relative group cursor-pointer"
+                  >
+                    {/* Circle Node on Timeline Line */}
+                    <div
+                      className={`absolute -left-[31px] sm:-left-[39px] top-1.5 w-4 h-4 rounded-full border-2 transition-colors ${
+                        isHighlighted
+                          ? 'bg-[#FFD600] border-[#111111]'
+                          : 'bg-white border-[#A3A3A3] group-hover:border-[#111111]'
+                      }`}
+                    />
+
+                    <div
+                      className={`p-4 sm:p-5 rounded-xl transition-all duration-200 ${
+                        isHighlighted
+                          ? 'bg-[#111111] text-white border-2 border-[#FFD600] shadow-sm'
+                          : 'bg-[#F7F7F7] text-[#111111] border border-[#E5E5E5]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <span
+                          className={`text-xs font-mono font-bold ${
+                            isHighlighted ? 'text-[#FFD600]' : 'text-[#666666]'
+                          }`}
+                        >
+                          {step.num}
+                        </span>
+                        <h3
+                          className={`text-sm font-bold uppercase tracking-wider ${
+                            isHighlighted ? 'text-white' : 'text-[#111111]'
+                          }`}
+                        >
+                          {step.title}
+                        </h3>
+                      </div>
+                      <p
+                        className={`text-xs leading-relaxed ${
+                          isHighlighted ? 'text-[#D1D1D1]' : 'text-[#666666]'
+                        }`}
+                      >
+                        {step.desc}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* ─────────────────────────────────────────────────────────────
+            6. WHY US SECTION (BLACK Background, 4 Clean Benefits)
+        ───────────────────────────────────────────────────────────── */}
+        <section
+          ref={whyUsRef}
+          id="why-us"
+          className="py-18 sm:py-24 bg-[#111111] text-white border-b border-[#262626]"
+        >
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-14 space-y-2">
+              <span className="text-xs font-bold text-[#FFD600] tracking-widest uppercase block">
+                BENEFITS
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight uppercase">
+                WHY RUDRA?
+              </h2>
+            </div>
+
+            {/* 4 Simple Points: SIMPLE, ORGANIZED, CONNECTED, EFFICIENT */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+              {[
+                {
+                  id: 'simple',
+                  num: '01',
+                  title: 'SIMPLE',
+                  desc: 'Clean, focused workflows without unnecessary complexity or training.',
+                },
+                {
+                  id: 'organized',
+                  num: '02',
+                  title: 'ORGANIZED',
+                  desc: 'Structured records for cases, visits, vehicles, and payments.',
+                },
+                {
+                  id: 'connected',
+                  num: '03',
+                  title: 'CONNECTED',
+                  desc: 'Real-time coordination between office managers and field staff.',
+                },
+                {
+                  id: 'efficient',
+                  num: '04',
+                  title: 'EFFICIENT',
+                  desc: 'Reduce manual paperwork and speed up recovery collection cycles.',
+                },
+              ].map((benefit, idx) => (
+                <div
+                  key={benefit.id}
+                  className={`p-6 rounded-xl bg-[#1A1A1A] border border-[#262626] hover:border-[#FFD600]/40 transition-all duration-200 hover:-translate-y-1 space-y-2.5 cursor-default ${
+                    visibleSections['why-us'] ? 'opacity-100 translate-y-0' : 'opacity-90'
+                  }`}
+                  style={{ transitionDelay: `${idx * 50}ms` }}
+                >
+                  <span className="text-xs font-mono font-bold text-[#FFD600] block">
+                    {benefit.num}
+                  </span>
+                  <h3 className="text-base font-bold text-white uppercase tracking-wide">
+                    {benefit.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#A3A3A3] leading-relaxed font-normal">
+                    {benefit.desc}
+                  </p>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
-        </div>
-      </header>
+        </section>
 
-      {/* 3. FEATURES SECTION ("Platform Capabilities") */}
-      <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
-          <span className="text-xs font-black uppercase tracking-widest text-[#EAB308]">
-            Platform Capabilities
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-black text-[#111111] tracking-tight">
-            Comprehensive Features Built for Recovery Operations
-          </h2>
-          <p className="text-sm sm:text-base text-[#666666] font-medium">
-            Purpose-built tooling designed specifically for auto lenders, NBFCs, repossession agencies, and field recovery teams.
-          </p>
-        </div>
-
-        {/* 6 Core Feature Cards in 3x2 Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Feature 1: Recovery Cases Management */}
-          <div className="p-6 sm:p-7 rounded-2xl bg-white border border-[#D6D6D6] shadow-xs hover:shadow-lg hover:-translate-y-1 hover:border-[#FACC15] transition-all group">
-            <div className="w-12 h-12 rounded-xl bg-[#FEF9C3] border border-[#EAB308]/40 text-[#000000] flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
-              <Truck className="w-6 h-6" />
-            </div>
-            <h3 className="font-extrabold text-base text-[#111111] mb-2">
-              Recovery Cases Management
-            </h3>
-            <p className="text-xs sm:text-sm text-[#666666] leading-relaxed font-normal">
-              Track vehicle recovery proposals from allocation to closure, with DPD buckets, POS amounts, vehicle registration, and multi-stage status workflows.
-            </p>
-          </div>
-
-          {/* Feature 2: Employee & Team Management */}
-          <div className="p-6 sm:p-7 rounded-2xl bg-white border border-[#D6D6D6] shadow-xs hover:shadow-lg hover:-translate-y-1 hover:border-[#FACC15] transition-all group">
-            <div className="w-12 h-12 rounded-xl bg-[#FEF9C3] border border-[#EAB308]/40 text-[#000000] flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
-              <Users className="w-6 h-6" />
-            </div>
-            <h3 className="font-extrabold text-base text-[#111111] mb-2">
-              Employee & Team Management
-            </h3>
-            <p className="text-xs sm:text-sm text-[#666666] leading-relaxed font-normal">
-              Role-based hierarchy with Admin, Manager, and Field Employee roles. Account verification, status controls, and granular field performance monitoring.
-            </p>
-          </div>
-
-          {/* Feature 3: Intelligent Excel Management */}
-          <div className="p-6 sm:p-7 rounded-2xl bg-white border border-[#D6D6D6] shadow-xs hover:shadow-lg hover:-translate-y-1 hover:border-[#FACC15] transition-all group">
-            <div className="w-12 h-12 rounded-xl bg-[#FEF9C3] border border-[#EAB308]/40 text-[#000000] flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
-              <FileSpreadsheet className="w-6 h-6" />
-            </div>
-            <h3 className="font-extrabold text-base text-[#111111] mb-2">
-              Intelligent Excel Management
-            </h3>
-            <p className="text-xs sm:text-sm text-[#666666] leading-relaxed font-normal">
-              Upload lender and bank portfolio spreadsheets with automated column mapping, validation, duplicate prevention, and zero data loss on existing records.
-            </p>
-          </div>
-
-          {/* Feature 4: Smart Assignment & Dispatch */}
-          <div className="p-6 sm:p-7 rounded-2xl bg-white border border-[#D6D6D6] shadow-xs hover:shadow-lg hover:-translate-y-1 hover:border-[#FACC15] transition-all group">
-            <div className="w-12 h-12 rounded-xl bg-[#FEF9C3] border border-[#EAB308]/40 text-[#000000] flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
-              <UserCheck className="w-6 h-6" />
-            </div>
-            <h3 className="font-extrabold text-base text-[#111111] mb-2">
-              Smart Assignment & Dispatch
-            </h3>
-            <p className="text-xs sm:text-sm text-[#666666] leading-relaxed font-normal">
-              Allocate recovery cases to field executives based on area, priority, and workload with real-time assignment history tracking and audit accountability.
-            </p>
-          </div>
-
-          {/* Feature 5: Field Follow-ups & Notes */}
-          <div className="p-6 sm:p-7 rounded-2xl bg-white border border-[#D6D6D6] shadow-xs hover:shadow-lg hover:-translate-y-1 hover:border-[#FACC15] transition-all group">
-            <div className="w-12 h-12 rounded-xl bg-[#FEF9C3] border border-[#EAB308]/40 text-[#000000] flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
-              <PhoneCall className="w-6 h-6" />
-            </div>
-            <h3 className="font-extrabold text-base text-[#111111] mb-2">
-              Field Follow-ups & Notes
-            </h3>
-            <p className="text-xs sm:text-sm text-[#666666] leading-relaxed font-normal">
-              Record ground visits, customer responses, promise-to-pay (PTP) dates, vehicle location pins, and contact logs in real time from mobile devices.
-            </p>
-          </div>
-
-          {/* Feature 6: Payment Tracking & Receipts */}
-          <div className="p-6 sm:p-7 rounded-2xl bg-white border border-[#D6D6D6] shadow-xs hover:shadow-lg hover:-translate-y-1 hover:border-[#FACC15] transition-all group">
-            <div className="w-12 h-12 rounded-xl bg-[#FEF9C3] border border-[#EAB308]/40 text-[#000000] flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
-              <CreditCard className="w-6 h-6" />
-            </div>
-            <h3 className="font-extrabold text-base text-[#111111] mb-2">
-              Payment Tracking & Receipts
-            </h3>
-            <p className="text-xs sm:text-sm text-[#666666] leading-relaxed font-normal">
-              Log field collections, reference numbers, payment modes, receipt issuance, and instant balance reconciliation against outstanding POS.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* 4. HOW IT WORKS / WORKFLOW SECTION */}
-      <section id="how-it-works" className="py-20 bg-[#FAFAFA]/80 border-y border-[#D6D6D6] transition-colors">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
-            <span className="text-xs font-black uppercase tracking-widest text-[#EAB308]">
-              Operational Pipeline
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#111111] tracking-tight">
-              How Rudra Services Powers the Recovery Lifecycle
+        {/* ─────────────────────────────────────────────────────────────
+            7. FINAL CTA (LIGHT GRAY Background, Clean, Centered)
+        ───────────────────────────────────────────────────────────── */}
+        <section
+          ref={ctaRef}
+          aria-label="Call to Action"
+          className="py-18 sm:py-24 bg-[#F5F5F5] text-[#111111] border-b border-[#E5E5E5] text-center"
+        >
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#111111] tracking-tight">
+              Ready to get started?
             </h2>
-            <p className="text-sm sm:text-base text-[#666666] font-medium">
-              From initial raw portfolio import to field investigation and banking balance reconciliation.
+
+            <p className="text-sm sm:text-base text-[#666666] max-w-md mx-auto leading-relaxed">
+              Manage your recovery operations in one simple platform.
             </p>
-          </div>
 
-          {/* 5-Step Connected Timeline */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 relative">
-            {/* Desktop Connector Line Behind Cards */}
-            <div className="hidden md:block absolute top-1/2 left-8 right-8 h-0.5 bg-gradient-to-r from-[#FACC15] via-[#EAB308] to-[#FFD600] -translate-y-8 -z-0 opacity-40" />
-
-            {/* Step 1: Import Portfolio */}
-            <div className="relative z-10 bg-white border border-[#D6D6D6] rounded-2xl p-6 shadow-xs hover:shadow-md transition-all space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-[#111111] font-mono">
-                  STEP 01
-                </span>
-                <div className="w-8 h-8 rounded-lg bg-[#FEF9C3] text-[#000000] flex items-center justify-center border border-[#EAB308]/40">
-                  <UploadCloud className="w-4 h-4" />
-                </div>
-              </div>
-              <h3 className="font-extrabold text-sm text-[#111111]">
-                Import Portfolio
-              </h3>
-              <p className="text-xs text-[#666666] leading-relaxed font-normal">
-                Upload Excel spreadsheets from banks and NBFCs with loan details, customer info, and vehicle data.
-              </p>
-            </div>
-
-            {/* Step 2: Review & Triage */}
-            <div className="relative z-10 bg-white border border-[#D6D6D6] rounded-2xl p-6 shadow-xs hover:shadow-md transition-all space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-[#111111] font-mono">
-                  STEP 02
-                </span>
-                <div className="w-8 h-8 rounded-lg bg-[#FEF9C3] text-[#000000] flex items-center justify-center border border-[#EAB308]/40">
-                  <Layers className="w-4 h-4" />
-                </div>
-              </div>
-              <h3 className="font-extrabold text-sm text-[#111111]">
-                Review & Triage
-              </h3>
-              <p className="text-xs text-[#666666] leading-relaxed font-normal">
-                Admin and Managers analyze DPD buckets, categorize risk levels, and organize recovery targets.
-              </p>
-            </div>
-
-            {/* Step 3: Assign Field Officers */}
-            <div className="relative z-10 bg-white border border-[#D6D6D6] rounded-2xl p-6 shadow-xs hover:shadow-md transition-all space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-[#111111] font-mono">
-                  STEP 03
-                </span>
-                <div className="w-8 h-8 rounded-lg bg-[#FEF9C3] text-[#000000] flex items-center justify-center border border-[#EAB308]/40">
-                  <Users className="w-4 h-4" />
-                </div>
-              </div>
-              <h3 className="font-extrabold text-sm text-[#111111]">
-                Assign Field Officers
-              </h3>
-              <p className="text-xs text-[#666666] leading-relaxed font-normal">
-                Cases are assigned to verified field executives with clear instructions, priority tags, and location info.
-              </p>
-            </div>
-
-            {/* Step 4: Execute Field Operations */}
-            <div className="relative z-10 bg-white border border-[#D6D6D6] rounded-2xl p-6 shadow-xs hover:shadow-md transition-all space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-[#111111] font-mono">
-                  STEP 04
-                </span>
-                <div className="w-8 h-8 rounded-lg bg-[#FEF9C3] text-[#000000] flex items-center justify-center border border-[#EAB308]/40">
-                  <PhoneCall className="w-4 h-4" />
-                </div>
-              </div>
-              <h3 className="font-extrabold text-sm text-[#111111]">
-                Execute Operations
-              </h3>
-              <p className="text-xs text-[#666666] leading-relaxed font-normal">
-                Officers conduct visits, log interaction notes, record PTP commitments, and collect field dues.
-              </p>
-            </div>
-
-            {/* Step 5: Resolve & Reconcile */}
-            <div className="relative z-10 bg-white border border-[#D6D6D6] rounded-2xl p-6 shadow-xs hover:shadow-md transition-all space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-[#111111] font-mono">
-                  STEP 05
-                </span>
-                <div className="w-8 h-8 rounded-lg bg-[#FEF9C3] text-[#000000] flex items-center justify-center border border-[#EAB308]/40">
-                  <CheckCircle2 className="w-4 h-4" />
-                </div>
-              </div>
-              <h3 className="font-extrabold text-sm text-[#111111]">
-                Resolve & Reconcile
-              </h3>
-              <p className="text-xs text-[#666666] leading-relaxed font-normal">
-                Track payments, update case statuses (Recovered, Settled, Closed), and generate operational reports.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. ROLE-BASED ACCESS SECTION ("Built for Every Stakeholder") */}
-      <section id="roles" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
-          <span className="text-xs font-black uppercase tracking-widest text-[#EAB308]">
-            Role-Based Workflows
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-black text-[#111111] tracking-tight">
-            Built for Your Recovery Team
-          </h2>
-          <p className="text-sm sm:text-base text-[#666666] font-medium">
-            Strict Role-Based Access Control (RBAC) ensures executive leaders, field supervisors, and ground agents have the exact tools and permissions they need.
-          </p>
-        </div>
-
-        {/* 3 Role Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Card 1: ADMIN */}
-          <div className="rounded-2xl bg-white border border-[#D6D6D6] p-7 shadow-sm hover:shadow-md hover:border-[#FACC15] transition-all flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#111111] text-[#FFFFFF] border border-[#333333]">
-                  EXECUTIVE ADMIN
-                </span>
-                <ShieldCheck className="w-5 h-5 text-[#111111]" />
-              </div>
-
-              <div>
-                <h3 className="text-xl font-black text-[#111111]">Admin Command Portal</h3>
-                <p className="text-xs text-[#666666] mt-1 leading-relaxed">
-                  Complete system governance, master file ingestion, and operational performance supervision.
-                </p>
-              </div>
-
-              <ul className="space-y-2.5 pt-3 border-t border-[#D6D6D6] text-xs text-[#111111] font-medium">
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#EAB308] shrink-0 mt-0.5" />
-                  <span>User verification, approval, rejection, and access disabling</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#EAB308] shrink-0 mt-0.5" />
-                  <span>Bulk Excel portfolio import with non-destructive UPSERTs</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#EAB308] shrink-0 mt-0.5" />
-                  <span>Global case allocation, reassignment, and priority overrides</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#EAB308] shrink-0 mt-0.5" />
-                  <span>Comprehensive institutional financial reports & Excel exports</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="pt-6 mt-6 border-t border-[#D6D6D6]">
+            <div className="pt-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 max-w-xs sm:max-w-md mx-auto">
               <button
-                onClick={() => navigate('/login')}
-                className="w-full min-h-[40px] px-4 py-2 bg-[#111111] hover:bg-[#333333] text-[#FFFFFF] rounded-xl text-xs font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                onClick={handleGetStarted}
+                className="group w-full sm:w-auto min-h-[48px] px-8 bg-[#FFD600] hover:bg-[#FACC15] active:scale-[0.98] text-[#111111] font-bold text-sm uppercase tracking-wider rounded-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-xs"
               >
-                <span>Login as Admin</span>
-                <ChevronRight className="w-3.5 h-3.5 text-[#FACC15]" />
+                <span>GET STARTED</span>
+                <ArrowRight className="w-4 h-4 text-[#111111] transition-transform duration-200 group-hover:translate-x-1" />
+              </button>
+              <button
+                onClick={handleLogin}
+                className="w-full sm:w-auto min-h-[48px] px-8 bg-white hover:bg-[#EAEAEA] text-[#111111] border border-[#CCCCCC] font-semibold text-sm uppercase tracking-wider rounded-lg transition-all duration-200 flex items-center justify-center cursor-pointer"
+              >
+                <span>LOGIN</span>
               </button>
             </div>
           </div>
+        </section>
+      </main>
 
-          {/* Card 2: MANAGER */}
-          <div className="rounded-2xl bg-white border border-[#D6D6D6] p-7 shadow-sm hover:shadow-md hover:border-[#FACC15] transition-all flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#FEF9C3] text-[#000000] border border-[#EAB308]">
-                  ZONAL MANAGER
-                </span>
-                <Briefcase className="w-5 h-5 text-[#EAB308]" />
-              </div>
-
-              <div>
-                <h3 className="text-xl font-black text-[#111111]">Supervisor Console</h3>
-                <p className="text-xs text-[#666666] mt-1 leading-relaxed">
-                  Zonal team leadership, case distribution, ground follow-up auditing, and collection review.
-                </p>
-              </div>
-
-              <ul className="space-y-2.5 pt-3 border-t border-[#D6D6D6] text-xs text-[#111111] font-medium">
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#EAB308] shrink-0 mt-0.5" />
-                  <span>Targeted recovery case allocation to active field officers</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#EAB308] shrink-0 mt-0.5" />
-                  <span>Monitor live ground follow-up notes & PTP commitments</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#EAB308] shrink-0 mt-0.5" />
-                  <span>Review and verify field collection receipts against POS</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#EAB308] shrink-0 mt-0.5" />
-                  <span>Analyze officer recovery percentages and DPD resolutions</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="pt-6 mt-6 border-t border-[#D6D6D6]">
-              <button
-                onClick={() => navigate('/login')}
-                className="w-full min-h-[40px] px-4 py-2 bg-[#111111] hover:bg-[#333333] text-[#FFFFFF] rounded-xl text-xs font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <span>Login as Manager</span>
-                <ChevronRight className="w-3.5 h-3.5 text-[#FACC15]" />
-              </button>
-            </div>
-          </div>
-
-          {/* Card 3: EMPLOYEE */}
-          <div className="rounded-2xl bg-white border border-[#D6D6D6] p-7 shadow-sm hover:shadow-md hover:border-[#FACC15] transition-all flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#F2F2F2] text-[#111111] border border-[#D6D6D6]">
-                  FIELD EMPLOYEE
-                </span>
-                <Users className="w-5 h-5 text-[#111111]" />
-              </div>
-
-              <div>
-                <h3 className="text-xl font-black text-[#111111]">Field Agent Workspace</h3>
-                <p className="text-xs text-[#666666] mt-1 leading-relaxed">
-                  Mobile-optimized ground workbench to locate debtors, log visit telemetry, and collect dues.
-                </p>
-              </div>
-
-              <ul className="space-y-2.5 pt-3 border-t border-[#D6D6D6] text-xs text-[#111111] font-medium">
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#EAB308] shrink-0 mt-0.5" />
-                  <span>Direct view of assigned recovery cases with borrower dossier</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#EAB308] shrink-0 mt-0.5" />
-                  <span>Instant ground follow-up entry with PTP date selection</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#EAB308] shrink-0 mt-0.5" />
-                  <span>Issue digital payment collection receipts (Cash/UPI/Bank)</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[#EAB308] shrink-0 mt-0.5" />
-                  <span>Track personal resolution KPIs and monthly recovery ranking</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="pt-6 mt-6 border-t border-[#D6D6D6] space-y-2">
-              <button
-                onClick={() => navigate('/login')}
-                className="w-full min-h-[40px] px-4 py-2 bg-[#FACC15] hover:bg-[#EAB308] text-[#000000] rounded-xl text-xs font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <span>Login as Field Officer</span>
-                <ChevronRight className="w-3.5 h-3.5 text-[#000000]" />
-              </button>
-              <button
-                onClick={() => navigate('/register')}
-                className="w-full min-h-[38px] px-4 py-2 bg-white hover:bg-[#F2F2F2] text-[#111111] border border-[#D6D6D6] hover:border-[#111111] rounded-xl text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <UserCheck className="w-3.5 h-3.5 text-[#111111]" />
-                <span>New Officer? Register Account</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 6. WHY RUDRA SERVICES / VALUE PROPOSITION SECTION */}
-      <section id="about" className="py-20 bg-[#FAFAFA]/80 border-t border-[#D6D6D6] transition-colors">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
-            <span className="text-xs font-black uppercase tracking-widest text-[#EAB308]">
-              Enterprise Trust & Reliability
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#111111] tracking-tight">
-              Why Leading Recovery Teams Choose Rudra Services
-            </h2>
-            <p className="text-sm sm:text-base text-[#666666] font-medium">
-              Built specifically to eliminate untracked phone calls, duplicate spreadsheets, and reconciliation disputes.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="p-6 rounded-2xl bg-white border border-[#D6D6D6] space-y-3 shadow-xs hover:border-[#FACC15] transition-all">
-              <div className="w-10 h-10 rounded-xl bg-[#FEF9C3] border border-[#EAB308]/40 text-[#000000] flex items-center justify-center">
-                <Database className="w-5 h-5" />
-              </div>
-              <h4 className="font-extrabold text-sm text-[#111111]">Zero Data Loss</h4>
-              <p className="text-xs text-[#666666] leading-relaxed">
-                Robust PostgreSQL storage ensuring every case, payment, and audit log is permanently preserved with non-destructive UPSERTs.
-              </p>
-            </div>
-
-            <div className="p-6 rounded-2xl bg-white border border-[#D6D6D6] space-y-3 shadow-xs hover:border-[#FACC15] transition-all">
-              <div className="w-10 h-10 rounded-xl bg-[#FEF9C3] border border-[#EAB308]/40 text-[#000000] flex items-center justify-center">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <h4 className="font-extrabold text-sm text-[#111111]">Role-Enforced Security</h4>
-              <p className="text-xs text-[#666666] leading-relaxed">
-                Strict RBAC preventing unauthorized data access between field agents, managers, and institutional administrators.
-              </p>
-            </div>
-
-            <div className="p-6 rounded-2xl bg-white border border-[#D6D6D6] space-y-3 shadow-xs hover:border-[#FACC15] transition-all">
-              <div className="w-10 h-10 rounded-xl bg-[#FEF9C3] border border-[#EAB308]/40 text-[#000000] flex items-center justify-center">
-                <Activity className="w-5 h-5" />
-              </div>
-              <h4 className="font-extrabold text-sm text-[#111111]">Audit-Ready Operations</h4>
-              <p className="text-xs text-[#666666] leading-relaxed">
-                Complete history of every case status transition, employee assignment, and financial collection receipt.
-              </p>
-            </div>
-
-            <div className="p-6 rounded-2xl bg-white border border-[#D6D6D6] space-y-3 shadow-xs hover:border-[#FACC15] transition-all">
-              <div className="w-10 h-10 rounded-xl bg-[#FEF9C3] border border-[#EAB308]/40 text-[#000000] flex items-center justify-center">
-                <PhoneCall className="w-5 h-5" />
-              </div>
-              <h4 className="font-extrabold text-sm text-[#111111]">Mobile-First for Field Teams</h4>
-              <p className="text-xs text-[#666666] leading-relaxed">
-                Fully responsive interface allowing field officers to log borrower interactions and issue receipts on smartphones in real time.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 7. CALL TO ACTION SECTION */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="rounded-3xl bg-gradient-to-r from-[#000000] via-[#111111] to-[#1F1F1F] border border-[#333333] text-white p-8 sm:p-14 shadow-2xl relative overflow-hidden text-center">
-          {/* Subtle Ambient Radial Lighting */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#FACC15]/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 max-w-3xl mx-auto space-y-6">
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight">
-              Ready to Streamline Your Vehicle Recovery Operations?
-            </h2>
-            <p className="text-sm sm:text-base text-[#D6D6D6] font-medium leading-relaxed max-w-2xl mx-auto">
-              Join recovery agencies and finance teams managing portfolios with precision, accountability, and speed.
-            </p>
-            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <button
-                onClick={() => navigate('/login')}
-                className="w-full sm:w-auto min-h-[48px] px-8 bg-[#FACC15] hover:bg-[#FFD600] text-[#000000] font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer border border-[#EAB308]"
-              >
-                <Lock className="w-4 h-4 text-[#000000]" />
-                <span>Login to Portal</span>
-                <ArrowRight className="w-4 h-4 text-[#000000]" />
-              </button>
-              <button
-                onClick={() => navigate('/register')}
-                className="w-full sm:w-auto min-h-[48px] px-8 bg-white hover:bg-[#F2F2F2] text-[#111111] font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer border border-[#D6D6D6]"
-              >
-                <UserCheck className="w-4 h-4 text-[#111111]" />
-                <span>Register Field Account</span>
-              </button>
-              <button
-                onClick={() => scrollToSection('features')}
-                className="w-full sm:w-auto min-h-[48px] px-8 bg-[#1F1F1F] hover:bg-[#333333] text-white font-bold text-xs uppercase tracking-wider rounded-xl border border-[#333333] transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>Explore Features</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 8. ENTERPRISE FOOTER */}
-      <footer className="border-t border-[#D6D6D6] bg-white py-12 px-4 sm:px-6 lg:px-8 transition-colors">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          {/* Brand Info */}
-          <div className="flex items-center gap-3 text-left">
-            <img
-              src="/rudra-logo.jpg"
-              alt="Rudra Services"
-              className="h-9 w-auto rounded-lg object-contain bg-white p-0.5 border border-[#D6D6D6]"
-            />
-            <div>
-              <span className="font-extrabold text-sm text-[#111111] block">
+      {/* ─────────────────────────────────────────────────────────────
+          8. FOOTER (BLACK Background, Minimal, Responsive)
+      ───────────────────────────────────────────────────────────── */}
+      <footer className="bg-[#111111] py-12 px-4 sm:px-6 lg:px-8 border-t border-[#262626] text-white">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+          {/* LEFT: R logo + RUDRA SERVICES + RECOVERY & REPO PLATFORM */}
+          <div
+            onClick={() => scrollToSection('home')}
+            className="flex items-center gap-3 cursor-pointer group select-none"
+            tabIndex={0}
+            role="button"
+            aria-label="Back to top"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') scrollToSection('home');
+            }}
+          >
+            <RudraLogo size={32} />
+            <div className="flex flex-col text-left">
+              <span className="text-sm font-bold text-white tracking-wider uppercase leading-tight group-hover:text-white transition-colors">
                 RUDRA SERVICES
               </span>
-              <p className="text-[11px] text-[#666666]">
-                Vehicle Recovery Management System
-              </p>
+              <span className="text-[9px] font-medium text-[#666666] tracking-widest uppercase">
+                Recovery & Repo Platform
+              </span>
             </div>
           </div>
 
-          {/* Nav Links */}
-          <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-[#666666] font-bold uppercase tracking-wider">
-            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-[#000000] transition-colors cursor-pointer">
-              Home
-            </button>
-            <button onClick={() => scrollToSection('features')} className="hover:text-[#000000] transition-colors cursor-pointer">
-              Features
-            </button>
-            <button onClick={() => scrollToSection('how-it-works')} className="hover:text-[#000000] transition-colors cursor-pointer">
-              How It Works
-            </button>
-            <button onClick={() => scrollToSection('roles')} className="hover:text-[#000000] transition-colors cursor-pointer">
-              Roles
-            </button>
-            <button onClick={() => navigate('/login')} className="hover:text-[#000000] transition-colors cursor-pointer">
-              Login
-            </button>
-            <button onClick={() => navigate('/register')} className="hover:text-[#000000] text-[#111111] font-black transition-colors cursor-pointer">
-              Register
-            </button>
+          {/* CENTER: Navigation Links */}
+          <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-6 text-xs text-[#A3A3A3] font-medium uppercase tracking-wider">
+            {[
+              { id: 'home', label: 'Home' },
+              { id: 'about', label: 'About' },
+              { id: 'features', label: 'Features' },
+              { id: 'how-it-works', label: 'How It Works' },
+              { id: 'why-us', label: 'Why Us' },
+            ].map((link) => (
+              <button
+                key={link.id}
+                onClick={() => scrollToSection(link.id)}
+                className="hover:text-white transition-colors cursor-pointer py-1"
+              >
+                {link.label}
+              </button>
+            ))}
           </div>
 
-          {/* System Status Pill */}
-          <div className="flex items-center gap-3">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#FEF9C3] text-[#000000] border border-[#EAB308]/60">
-              <span className="w-2 h-2 rounded-full bg-[#FACC15] animate-pulse" />
-              <span>All Systems Operational</span>
-            </div>
+          {/* RIGHT: Back to Top & Copyright */}
+          <div className="flex flex-col items-center md:items-end gap-1.5 text-xs text-[#666666] text-center md:text-right font-mono">
+            <button
+              onClick={() => scrollToSection('home')}
+              className="inline-flex items-center gap-1 text-[#A3A3A3] hover:text-white transition-colors cursor-pointer mb-1"
+            >
+              <span>Back to top</span>
+              <ArrowUp className="w-3.5 h-3.5" />
+            </button>
+            <p>© 2026 Rudra Services. All rights reserved.</p>
           </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-[#D6D6D6] flex flex-col sm:flex-row items-center justify-between text-xs text-[#666666] gap-4">
-          <p>© 2025 Rudra Services. Vehicle Recovery Management System. All rights reserved.</p>
-          <p className="font-mono text-[11px]">Powered by Neon PostgreSQL • React • Node.js</p>
         </div>
       </footer>
     </div>
   );
 };
+
 export default Home;

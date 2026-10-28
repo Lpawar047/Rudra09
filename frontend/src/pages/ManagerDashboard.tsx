@@ -118,7 +118,7 @@ export const ManagerDashboard: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-[#D6D6D6] font-medium">
               {cases.map((c) => (
-                <tr key={c.id} className="hover:bg-[#FFFBE6]:bg-[#1A1A1A] transition-colors">
+                <tr key={c.id} className="hover:bg-[#FFFBE6] transition-colors">
                   <td className="p-3 font-bold text-[#111111]">{c.loan_account_number}</td>
                   <td className="p-3">{c.customer_name}</td>
                   <td className="p-3">

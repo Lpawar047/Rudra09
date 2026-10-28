@@ -15,10 +15,20 @@ export async function getUsers(req: AuthenticatedRequest, res: Response) {
       LEFT JOIN users rb ON u.rejected_by = rb.id
     `;
     const params: any[] = [];
+    const conditions: string[] = [];
 
     if (role) {
-      sql += ' WHERE u.role = $1';
-      params.push(role);
+      conditions.push('UPPER(u.role) = UPPER($' + (params.length + 1) + ')');
+      params.push(String(role).trim());
+    }
+
+    if (req.query.status) {
+      conditions.push('UPPER(u.status) = UPPER($' + (params.length + 1) + ')');
+      params.push(String(req.query.status).trim());
+    }
+
+    if (conditions.length > 0) {
+      sql += ' WHERE ' + conditions.join(' AND ');
     }
 
     sql += ' ORDER BY u.id DESC';

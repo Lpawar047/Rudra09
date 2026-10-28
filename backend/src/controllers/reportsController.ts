@@ -10,11 +10,15 @@ export async function getDashboardMetrics(req: AuthenticatedRequest, res: Respon
     const params: any[] = [];
 
     if (user.role === 'EMPLOYEE') {
-      userFilter = ' WHERE r.assigned_employee_id = $1';
-      params.push(user.id);
+      if (req.query.scope === 'mine') {
+        userFilter = ' WHERE r.assigned_employee_id = $1';
+        params.push(user.id);
+      }
     } else if (user.role === 'MANAGER') {
-      userFilter = ' WHERE (r.assigned_manager_id = $1 OR r.assigned_manager_id IS NULL)';
-      params.push(user.id);
+      if (req.query.scope === 'mine') {
+        userFilter = ' WHERE (r.assigned_manager_id = $1 OR r.assigned_manager_id IS NULL)';
+        params.push(user.id);
+      }
     }
 
     // Total Cases

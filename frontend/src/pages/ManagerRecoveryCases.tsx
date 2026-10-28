@@ -6,6 +6,8 @@ import { StatusBadge } from '../components/StatusBadge';
 import { PriorityBadge } from '../components/PriorityBadge';
 import { Modal } from '../components/Modal';
 import { CaseDetailsModal } from '../components/CaseDetailsModal';
+import { AssignmentSuccessModal, AssignmentData } from '../components/AssignmentSuccessModal';
+import { TALUKA_OPTIONS } from '../utils/taluka';
 import {
   Search,
   UserCheck,
@@ -28,6 +30,7 @@ export const ManagerRecoveryCases: React.FC = () => {
   const [priorityFilter, setPriorityFilter] = useState('');
   const [employeeFilter, setEmployeeFilter] = useState('');
   const [bucketFilter, setBucketFilter] = useState('');
+  const [talukaFilter, setTalukaFilter] = useState('');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -37,6 +40,7 @@ export const ManagerRecoveryCases: React.FC = () => {
   const [selectedCase, setSelectedCase] = useState<RecoveryCase | null>(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [assignmentSuccessData, setAssignmentSuccessData] = useState<AssignmentData | null>(null);
   const [assignEmpId, setAssignEmpId] = useState('');
   const [assignRemarks, setAssignRemarks] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,7 +48,7 @@ export const ManagerRecoveryCases: React.FC = () => {
 
   useEffect(() => {
     fetchCases();
-  }, [search, statusFilter, priorityFilter, employeeFilter, bucketFilter, page, limit]);
+  }, [search, statusFilter, priorityFilter, employeeFilter, bucketFilter, talukaFilter, page, limit]);
 
   useEffect(() => {
     fetchEmployees();
@@ -58,16 +62,11 @@ export const ManagerRecoveryCases: React.FC = () => {
       if (statusFilter) params.status = statusFilter;
       if (priorityFilter) params.priority = priorityFilter;
       if (employeeFilter) params.employee_id = employeeFilter;
+      if (bucketFilter) params.bucket = bucketFilter;
+      if (talukaFilter) params.taluka = talukaFilter;
 
       const res = await api.get('/recovery-cases', { params });
-      let fetchedCases: RecoveryCase[] = res.data.cases || [];
-
-      if (bucketFilter) {
-        fetchedCases = fetchedCases.filter((c) => {
-          const calculatedBucket = c.bom_bucket || (c.dpd ? (c.dpd <= 30 ? 'BOM 1' : c.dpd <= 60 ? 'BOM 2' : c.dpd <= 90 ? 'BOM 3' : 'BOM 4+') : 'BOM 1');
-          return calculatedBucket.toLowerCase().includes(bucketFilter.toLowerCase());
-        });
-      }
+      const fetchedCases: RecoveryCase[] = res.data.cases || [];
 
       setCases(fetchedCases);
       if (res.data.pagination) {
@@ -104,25 +103,59 @@ export const ManagerRecoveryCases: React.FC = () => {
     setPriorityFilter('');
     setEmployeeFilter('');
     setBucketFilter('');
+    setTalukaFilter('');
     setPage(1);
   };
 
-  const hasActiveFilters = Boolean(search || statusFilter || priorityFilter || employeeFilter || bucketFilter);
+  const hasActiveFilters = Boolean(search || statusFilter || priorityFilter || employeeFilter || bucketFilter || talukaFilter);
 
   const handleAssignSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCase || !assignEmpId) return;
+    if (!selectedCase || !assignEmpId) {
+      alert('Please select a field officer to assign this case.');
+      return;
+    }
     setIsSubmitting(true);
     try {
-      await api.post('/assignments', {
+      const res = await api.post('/assignments', {
         case_id: selectedCase.id,
         employee_id: parseInt(assignEmpId, 10),
         remarks: assignRemarks,
       });
+
       setShowAssignModal(false);
+      setAssignRemarks('');
       fetchCases();
-    } catch (err) {
-      alert('Failed to assign case.');
+
+      if (res.data?.assignment) {
+        setAssignmentSuccessData(res.data.assignment);
+      } else {
+        const assignedEmp = employees.find((emp) => emp.id === parseInt(assignEmpId, 10));
+        setAssignmentSuccessData({
+          case_id: selectedCase.id,
+          recovery_code: selectedCase.recovery_code || `RC-${String(selectedCase.id).padStart(3, '0')}`,
+          loan_account_number: selectedCase.loan_account_number || selectedCase.proposal_no || 'N/A',
+          customer_name: selectedCase.customer_name || 'N/A',
+          customer_phone: selectedCase.customer_phone,
+          customer_address: selectedCase.customer_address,
+          vehicle_reg_no: selectedCase.registration_number,
+          vehicle_model: selectedCase.vehicle_model,
+          taluka: selectedCase.taluka,
+          total_overdue: selectedCase.total_overdue,
+          dpd: selectedCase.dpd,
+          status: 'ASSIGNED',
+          employee_id: parseInt(assignEmpId, 10),
+          employee_name: assignedEmp?.name || 'Field Officer',
+          employee_email: assignedEmp?.email || '',
+          employee_phone: assignedEmp?.phone,
+          employee_dept: assignedEmp?.department,
+          remarks: assignRemarks,
+        });
+      }
+    } catch (err: any) {
+      console.error('Case assignment error:', err);
+      const errMsg = err.response?.data?.message || 'Failed to assign case. Please try again.';
+      alert(errMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -260,6 +293,27 @@ export const ManagerRecoveryCases: React.FC = () => {
             <span className="font-mono font-black text-sm text-[#000000]">
               {formatCurrency(due)}
             </span>
+          </div>
+        );
+      },
+    },
+    {
+      header: 'Taluka',
+      minWidth: '140px',
+      sortable: true,
+      accessor: (row) => {
+        const taluka = row.taluka;
+        return (
+          <div>
+            {taluka ? (
+              <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-[#FEF9C3] text-[#111111] border border-[#EAB308]">
+                {taluka}
+              </span>
+            ) : (
+              <span className="text-xs font-medium text-[#666666]">
+                —
+              </span>
+            )}
           </div>
         );
       },
@@ -455,9 +509,14 @@ export const ManagerRecoveryCases: React.FC = () => {
       {/* Title Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight">
-            Manager Case Supervision
-          </h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight">
+              Manager Case Supervision
+            </h1>
+            <span className="px-3 py-1 rounded-xl bg-[#FEF9C3] text-[#000000] border border-[#EAB308] font-bold text-xs sm:text-sm shadow-xs tabular-nums">
+              {total.toLocaleString('en-IN')} {hasActiveFilters ? 'Cases Found' : 'Total Cases'}
+            </span>
+          </div>
           <p className="text-sm text-[#666666] font-medium mt-1">
             Supervise team recovery operations, allocate officers, and monitor dues.
           </p>
@@ -503,7 +562,7 @@ export const ManagerRecoveryCases: React.FC = () => {
             <span>Filters</span>
             {hasActiveFilters && (
               <span className="w-5 h-5 rounded-full bg-[#111111] text-[#FFFFFF] text-[10px] font-black flex items-center justify-center">
-                {[statusFilter, priorityFilter, employeeFilter, bucketFilter].filter(Boolean).length}
+                {[statusFilter, priorityFilter, employeeFilter, bucketFilter, talukaFilter].filter(Boolean).length}
               </span>
             )}
           </button>
@@ -531,6 +590,26 @@ export const ManagerRecoveryCases: React.FC = () => {
             <div className="space-y-2.5">
               <div>
                 <label className="text-[11px] font-bold text-[#666666] block mb-1">
+                  Taluka
+                </label>
+                <select
+                  value={talukaFilter}
+                  onChange={(e) => {
+                    setTalukaFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className="min-h-[44px] w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#D6D6D6] rounded-xl text-[#111111] font-bold"
+                >
+                  {TALUKA_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt === 'All Talukas' ? '' : opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-[#666666] block mb-1">
                   Recovery Status
                 </label>
                 <select
@@ -541,7 +620,7 @@ export const ManagerRecoveryCases: React.FC = () => {
                   }}
                   className="min-h-[44px] w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#D6D6D6] rounded-xl text-[#111111] font-bold"
                 >
-                  <option value="">All Recovery Statuses</option>
+                  <option value="">All Cases</option>
                   <option value="Paid">Paid</option>
                   <option value="Unpaid">Unpaid</option>
                   <option value="PENDING">PENDING</option>
@@ -628,8 +707,8 @@ export const ManagerRecoveryCases: React.FC = () => {
           </div>
         )}
 
-        {/* Desktop & Tablet Filters (5 Columns) */}
-        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        {/* Desktop & Tablet Filters (6 Columns) */}
+        <div className="hidden sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <div className="relative lg:col-span-1">
             <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-[#666666] pointer-events-none" />
             <input
@@ -646,6 +725,24 @@ export const ManagerRecoveryCases: React.FC = () => {
 
           <div>
             <select
+              value={talukaFilter}
+              onChange={(e) => {
+                setTalukaFilter(e.target.value);
+                setPage(1);
+              }}
+              className="min-h-[44px] w-full px-3.5 py-2.5 text-xs bg-[#FFFFFF] border border-[#D6D6D6] rounded-xl text-[#111111] font-bold focus:outline-none focus:ring-2 focus:ring-[#FACC15]"
+              title="Taluka"
+            >
+              {TALUKA_OPTIONS.map((opt) => (
+                <option key={opt} value={opt === 'All Talukas' ? '' : opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <select
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
@@ -653,7 +750,7 @@ export const ManagerRecoveryCases: React.FC = () => {
               }}
               className="min-h-[44px] w-full px-3.5 py-2.5 text-xs bg-[#FFFFFF] border border-[#D6D6D6] rounded-xl text-[#111111] font-bold focus:outline-none focus:ring-2 focus:ring-[#FACC15]"
             >
-              <option value="">All Recovery Statuses</option>
+              <option value="">All Cases</option>
               <option value="Paid">Paid</option>
               <option value="Unpaid">Unpaid</option>
               <option value="PENDING">PENDING</option>
@@ -818,6 +915,16 @@ export const ManagerRecoveryCases: React.FC = () => {
                   </span>
                 </div>
 
+                {/* Taluka */}
+                {item.taluka && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#666666] font-medium">Taluka:</span>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-[#FEF9C3] text-[#111111] border border-[#EAB308]">
+                      {item.taluka}
+                    </span>
+                  </div>
+                )}
+
                 {/* Total Due */}
                 <div className="flex items-center justify-between pt-1 border-t border-[#D6D6D6]/60 font-mono">
                   <span className="text-[#666666] font-bold">Total Due:</span>
@@ -928,6 +1035,13 @@ export const ManagerRecoveryCases: React.FC = () => {
           </div>
         </form>
       </Modal>
+
+      {/* Assignment Success Dossier Modal */}
+      <AssignmentSuccessModal
+        isOpen={Boolean(assignmentSuccessData)}
+        onClose={() => setAssignmentSuccessData(null)}
+        assignment={assignmentSuccessData}
+      />
     </div>
   );
 };
